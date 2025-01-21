@@ -1,0 +1,46 @@
+<svg width="400" height="100" viewBox="0 0 400 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Definitions for gradients and filters -->
+    <defs>
+        <!-- Animated Background Gradient -->
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#2E86AB">
+                <animate attributeName="stop-color" values="#2E86AB;#1B4F72;#2E86AB" dur="10s" repeatCount="indefinite" />
+            </stop>
+            <stop offset="100%" stop-color="#1B4F72">
+                <animate attributeName="stop-color" values="#1B4F72;#2E86AB;#1B4F72" dur="10s" repeatCount="indefinite" />
+            </stop>
+        </linearGradient>
+
+        <!-- Drop shadow filter for text and shapes -->
+        <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+            <feOffset in="blur" dx="2" dy="2" result="offsetBlur" />
+            <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+
+        <!-- Gradient for the "OO" lettering -->
+        <linearGradient id="ooGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#FFFFFF" />
+            <stop offset="100%" stop-color="#D0E8F2" />
+        </linearGradient>
+    </defs>
+
+    <!-- Background with rounded corners -->
+    <rect width="400" height="100" fill="url(#bgGradient)" rx="10" ry="10"/>
+
+    <!-- Logo Text Group -->
+    <g font-family="Arial, Helvetica, sans-serif" font-weight="bold" filter="url(#dropShadow)">
+        <!-- The word "Cam" -->
+        <text x="40" y="60" font-size="28" fill="#FFFFFF">Cam</text>
+        <g id="oo" transform="translate(120,0)">
+            <circle cx="10" cy="55" r="12" fill="url(#ooGradient)" />
+            <circle cx="35" cy="55" r="12" fill="url(#ooGradient)" />
+        </g>
+
+        <!-- The word "Pay" -->
+        <text x="180" y="60" font-size="28" fill="#FFFFFF">Pay</text>
+    </g>
+</svg>
