@@ -11,8 +11,10 @@ namespace Camoo\Pay\WooCommerce\Admin;
 use Camoo\Pay\WooCommerce\Plugin;
 use Camoo\Payment\Api\PaymentApi;
 use Camoo\Payment\Http\Client;
+use Throwable;
 use WC_Order;
 use WC_Order_Refund;
+use WP_Error;
 
 defined('ABSPATH') || exit;
 
@@ -56,28 +58,21 @@ if (!class_exists(PluginAdmin::class)) {
             add_filter('manage_edit-shop_order_columns', [__CLASS__, 'extend_order_view_for_camoo_pay'], 10);
             add_action('manage_shop_order_posts_custom_column', [__CLASS__, 'get_extended_order_value'], 2);
             add_filter('woocommerce_admin_order_actions', [__CLASS__, 'add_custom_order_status_actions_button'], 100, 2);
-            add_action('wp_ajax_wc_camoo_pay_mark_order_status', [__CLASS__, 'checkRemotePaymentStatus']);
+            add_action('wp_ajax_wc_camoo_pay_mark_order_status', [__CLASS__, 'verifyCamooPayStatus']);
             add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_camoo_pay_css_scripts']);
         }
 
-        public static function enqueue_admin_camoo_pay_css_scripts(): void
+        public static function verifyCamooPayStatus(): void
         {
-            wp_enqueue_style(
-                'admin_camoo_pay_style',
-                plugins_url('/includes/assets/css/admin-style.css', dirname(__DIR__)),
-                [],
-                Plugin::WC_CAMOO_PAY_DB_VERSION
-            );
-        }
 
-        public static function checkRemotePaymentStatus(): bool
-        {
             if (current_user_can('edit_shop_orders') &&
                 check_admin_referer('woocommerce_camoo_pay_check_status') &&
                 isset($_GET['status'], $_GET['order_id'])) {
+
                 $status = sanitize_text_field(wp_unslash($_GET['status']));
                 /** @var bool|WC_Order|WC_Order_Refund $order */
                 $order = wc_get_order(absint(wp_unslash($_GET['order_id'])));
+
                 if ($status === 'check' && !empty($order) && $order->has_status(['pending', 'on-hold', 'processing'])) {
                     WC()->payment_gateways();
                     $settings = get_option('woocommerce_' . Plugin::WC_CAMOO_PAY_GATEWAY_ID . '_settings');
@@ -88,19 +83,43 @@ if (!class_exists(PluginAdmin::class)) {
 
                     $paymentApi = new PaymentApi($client);
                     $paymentData = self::getPaymentByWcOrderId($order->get_id());
+
                     if ($paymentData) {
-                        $verify = $paymentApi->verify($paymentData->order_transaction_id);
-                        Plugin::processWebhookStatus(
-                            $order,
-                            $verify->status,
-                            $paymentData->merchant_reference_id,
-                            $verify
-                        );
+
+                        try {
+                            $verify = $paymentApi->verify($paymentData->order_transaction_id);
+                        } catch (Throwable $throwable) {
+                            $verify = null;
+                            wc_add_wp_error_notices(new WP_Error('Error while verifying payment status'));
+                        }
+
+                        if (null !== $verify) {
+                            Plugin::processWebhookStatus(
+                                $order,
+                                $verify->status,
+                                $paymentData->merchant_reference_id,
+                                $verify
+                            );
+                        }
+
                     }
                 }
             }
 
-            return wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url('edit.php?post_type=shop_order'));
+            $adminUrl = wp_get_referer() ? wp_get_referer() : admin_url('edit.php?post_type=shop_order');
+
+            wp_safe_redirect($adminUrl); // Perform the redirect
+            exit;
+        }
+
+        public static function enqueue_admin_camoo_pay_css_scripts(): void
+        {
+            wp_enqueue_style(
+                'admin_camoo_pay_style',
+                plugins_url('/includes/assets/css/admin-style.css', dirname(__DIR__)),
+                [],
+                Plugin::WC_CAMOO_PAY_DB_VERSION
+            );
         }
 
         public static function add_custom_order_status_actions_button(array $actions, $order): array

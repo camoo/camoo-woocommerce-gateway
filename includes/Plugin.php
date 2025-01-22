@@ -24,8 +24,6 @@ if (!class_exists(Plugin::class)) {
     {
         public const WC_CAMOO_PAY_DB_VERSION = '1.0';
 
-        public const DOMAIN_TEXT = 'camoo-pay-for-woocommerce';
-
         public const WC_CAMOO_PAY_GATEWAY_ID = 'wc_camoo_pay';
 
         protected $id;
@@ -48,7 +46,6 @@ if (!class_exists(Plugin::class)) {
 
         protected $version;
 
-        protected $image_format = 'full';
 
         public function __construct($pluginPath, $adapterName, $adapterFile, $description = '', $version = null)
         {
@@ -125,6 +122,20 @@ if (!class_exists(Plugin::class)) {
             $this->loadGatewayClass();
             add_action('init', [__CLASS__, 'loadTextDomain']);
             add_action('rest_api_init', [$this, 'notification_route']);
+        }
+
+        public function notification_route(): void
+        {
+            register_rest_route(
+                'wc-camoo-pay',
+                '/notification',
+                [
+                    'methods' => 'GET',
+                    'callback' => [new WC_CamooPay_Gateway(), 'onNotification'],
+                ]
+            );
+
+            flush_rewrite_rules();
         }
 
         public function onPluginActionLinks($links)
@@ -205,20 +216,6 @@ if (!class_exists(Plugin::class)) {
             );
         }
 
-        public function notification_route(): void
-        {
-            register_rest_route(
-                'wc-camoo-pay/notification',
-                '/(.*?)',
-                [
-                    'methods' => 'GET',
-                    'callback' => [new WC_CamooPay_Gateway(), 'onNotification'],
-                    'permission_callback' => '__return_true',
-                ]
-            );
-            flush_rewrite_rules();
-        }
-
         public static function processWebhookStatus(
             $order,
             string $status,
@@ -234,7 +231,7 @@ if (!class_exists(Plugin::class)) {
                 ),
                 Status::CONFIRMED => self::processWebhookConfirmed($order, $merchantReferenceId, $payment),
                 Status::CANCELED => self::processWebhookCanceled($order, $merchantReferenceId),
-                Status::FAILED => self::processWebhookFailed($order, $merchantReferenceId),
+                Status::FAILED, Status::ERRORED => self::processWebhookFailed($order, $merchantReferenceId),
             };
 
         }
@@ -319,27 +316,27 @@ if (!class_exists(Plugin::class)) {
             );
 
             /**
-             * Executes the hook camoopay_after_status_change where ever it's defined.
+             * Executes the hook camoo_pay_after_status_change where ever it's defined.
              *
              * Example usage:
              *
              *     // The action callback function.
-             *     function example_callback( $id, $shopType) {
+             *     Function example_callback( $id, $shopType) {
              *         // (maybe) do something with the args.
              *     }
              *
-             *     add_action('camoopay_after_status_change', 'example_callback', 10, 2 );
+             *     Add_action('camoo_pay_after_status_change', 'example_callback', 10, 2 );
              *
              *     /*
              *      * Trigger the actions by calling the 'example_callback()' function
-             *      * that's hooked onto `camoopay_after_status_change`.
+             *      * that's hooked onto `camoo_pay_after_status_change`.
              *
              *      * - $id is either the transaction ID or the merchant reference ID
              *      * - $shopType is the shop invoked actually the hook
              *
-             * @since 1.0.3
+             * @since 1.0
              */
-            do_action('camoopay_after_status_change', sanitize_text_field($referenceId), 'wc');
+            do_action('camoo_pay_after_status_change', sanitize_text_field($referenceId), 'wc');
         }
     }
 }

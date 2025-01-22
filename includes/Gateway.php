@@ -250,7 +250,10 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             // Only add the notice if the payment is successful
             if ($payment !== null) {
                 wc_add_notice(
-                    __('Veuillez suivre les instructions Mobile Money pour completer votre payment', 'camoo-pay-for-woocommerce'),
+                    __(
+                        'Veuillez suivre les instructions Mobile Money pour completer votre payment',
+                        'camoo-pay-for-woocommerce'
+                    ),
                     'notice'
                 );
             }
@@ -259,10 +262,6 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             $returnUrl = get_permalink(wc_get_page_id('shop')) . '?trx=' . $merchantReferenceId . '&status='
                 . strtolower($status->value);
 
-            //$shopPageUrl = isset($order) ? $order->get_checkout_order_received_url() :
-            //  get_permalink(wc_get_page_id('shop'));
-
-            //return wp_redirect($shopPageUrl);
             return [
                 'result' => $payment === null ? 'failure' : 'success',
                 'redirect' => $returnUrl,
@@ -279,6 +278,15 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         $merchantReferenceId = sanitize_text_field(filter_input(INPUT_GET, 'trx'));
 
+        if (empty($merchantReferenceId) || !wp_is_uuid(sanitize_text_field($merchantReferenceId))) {
+            $this->logger->error(__FILE__, __LINE__, 'Invalid trx parameter: ' . $merchantReferenceId);
+
+            return new WP_REST_Response([
+                'status' => 'KO',
+                'message' => 'Bad Request - Invalid trx parameter',
+            ], 400);
+        }
+
         $paymentHistory = Plugin::getPaymentHistoryByReferenceId($merchantReferenceId);
 
         $orderId = (int)$paymentHistory->wc_order_id;
@@ -287,7 +295,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
             return new WP_REST_Response([
                 'status' => 'KO',
-                'message' => 'Bad Request',
+                'message' => 'CamooPay Bad notification Request',
             ], 400);
         }
 
@@ -301,7 +309,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
             return new WP_REST_Response([
                 'status' => 'KO',
-                'message' => 'Bad Request',
+                'message' => 'Bad Request - Invalid status parameter',
             ], 400);
         }
 
@@ -320,7 +328,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
         return new WP_REST_Response([
             'status' => 'OK',
-            'message' => sprintf('Status Updated From %s To %s', $oldStatus, $order->get_status()),
+            'message' => sprintf('CamooPay Status Updated From %s To %s', $oldStatus, $order->get_status()),
         ], 200);
     }
 
