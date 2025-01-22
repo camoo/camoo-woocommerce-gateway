@@ -1,6 +1,6 @@
 === CamooPay for WooCommerce - Mobile Money Gateway ===
 Contributors: camoo
-Tags: Gateway, Mobile Money, Orange Money, e-Commerce, Cameroon, Cameroun, MTN, Orange
+Tags: Mobile Money, Orange Money, e-Commerce, Cameroon, MTN, Orange
 Requires at least: 4.8
 Requires Plugins: woocommerce
 Tested up to: 6.7
@@ -89,5 +89,5 @@ N/A
 
 == Changelog ==
 
-= 1.0.0: October 07, 2021 =
+= 1.0: January 22, 2025 =
 * Start plugin
