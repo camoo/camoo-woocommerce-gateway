@@ -8,6 +8,11 @@ The usage of this plugin is completely free. You have to just have a camoo accou
 * [Sign up](https://camoo.cm/) for a free account
 * Ask Camoo SARL Team for consumerKey and consumerSecret
 
+# Requirements
+For the plugin to work, you need the following:
+* WordPress 6.0 or later
+* WooCommerce 4.8 or later
+* PHP 8.1 or later
 
 # Features
 
