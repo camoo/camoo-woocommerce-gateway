@@ -8,7 +8,7 @@ defined('ABSPATH') || exit;
 
 class Install
 {
-    public const PLUGIN_MAIN_FILE = 'camoo-pay-for-woocommerce/camoo-pay-for-woocommerce.php';
+    public const PLUGIN_MAIN_FILE = 'camoo-pay-for-ecommerce/camoo-pay-for-ecommerce.php';
 
     public function __construct()
     {

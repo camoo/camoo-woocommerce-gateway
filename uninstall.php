@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Uninstalling CamooPay for WooCommerce - Mobile Money Gateway, deletes tables, and options.
+ * Uninstalling CamooPay for eCommerce - Mobile Money Gateway, deletes tables, and options.
  *
  * @version 1.0
  *

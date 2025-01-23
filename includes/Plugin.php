@@ -66,7 +66,7 @@ if (!class_exists(Plugin::class)) {
             ];
 
             $this->mainMenuId = 'admin.php';
-            $this->title = __('CamooPay for e-commerce - Payment Gateway for WooCommerce', 'camoo-pay-for-woocommerce');
+            $this->title = __('CamooPay for e-commerce - Payment Gateway for WooCommerce', 'camoo-pay-for-ecommerce');
         }
 
         public function register(): void
@@ -143,7 +143,7 @@ if (!class_exists(Plugin::class)) {
             $link = sprintf(
                 '<a href="%s">%s</a>',
                 admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_camoo_pay'),
-                __('Settings', 'camoo-pay-for-woocommerce')
+                __('Settings', 'camoo-pay-for-ecommerce')
             );
             array_unshift($links, $link);
 
@@ -210,7 +210,7 @@ if (!class_exists(Plugin::class)) {
         public static function loadTextDomain(): void
         {
             load_plugin_textdomain(
-                'camoo-pay-for-woocommerce',
+                'camoo-pay-for-ecommerce',
                 false,
                 dirname(plugin_basename(__FILE__)) . '/languages'
             );
@@ -253,14 +253,14 @@ if (!class_exists(Plugin::class)) {
             try {
                 $verifyPayment = $payment ?? $paymentApi->verify($ptn);
             } catch (Throwable) {
-                $order->add_order_note(__('CamooPay payment cannot be confirmed', 'camoo-pay-for-woocommerce'), true);
+                $order->add_order_note(__('CamooPay payment cannot be confirmed', 'camoo-pay-for-ecommerce'), true);
 
                 return;
             }
 
             $fees = $verifyPayment?->fees ?? null;
             self::applyStatusChange(Status::CONFIRMED, $merchantReferenceId, $fees);
-            $order->add_order_note(__('CamooPay payment completed', 'camoo-pay-for-woocommerce'), true);
+            $order->add_order_note(__('CamooPay payment completed', 'camoo-pay-for-ecommerce'), true);
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -280,7 +280,7 @@ if (!class_exists(Plugin::class)) {
         {
             $order->update_status('cancelled');
             self::applyStatusChange(Status::CANCELED, $merchantReferenceId);
-            $order->add_order_note(__('CamooPay payment cancelled', 'camoo-pay-for-woocommerce'), true);
+            $order->add_order_note(__('CamooPay payment cancelled', 'camoo-pay-for-ecommerce'), true);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'cancelled');
         }
 
@@ -289,7 +289,7 @@ if (!class_exists(Plugin::class)) {
         {
             $order->update_status('failed');
             self::applyStatusChange(Status::FAILED, $merchantReferenceId);
-            $order->add_order_note(__('CamooPay payment failed', 'camoo-pay-for-woocommerce'), true);
+            $order->add_order_note(__('CamooPay payment failed', 'camoo-pay-for-ecommerce'), true);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'failed');
         }
 

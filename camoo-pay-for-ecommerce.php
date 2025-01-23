@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: CamooPay for WooCommerce - Mobile Money Gateway
+ * Plugin Name: CamooPay for e-Commerce - Mobile Money Gateway
  * Requires Plugins: woocommerce
  * Plugin URI: https://camoo.cm/
  * Description: Receive Mobile Money payments on your store using CamooPay for WooCommerce.
@@ -13,7 +13,7 @@
  * Author URI: https://www.camoo.cm/
  * Developer: Camoo Sarl
  * Developer URI: http://www.camoo.cm/
- * Text Domain: camoo-pay-for-woocommerce
+ * Text Domain: camoo-pay-for-ecommerce
  * Domain Path: /languages
  * Requires at least: 6.0
  * Requires PHP: 8.1
@@ -36,11 +36,11 @@ require_once __DIR__ . '/includes/admin/PluginAdmin.php';
     'Gateway',
     sprintf(
         '%s<br/><a href="%s" target="_blank">%s</a><br/><a href="%s" target="_blank">%s</a>',
-        __('CamooPay for e-commerce payment gateway', 'camoo-pay-for-woocommerce'),
+        __('CamooPay for e-commerce payment gateway', 'camoo-pay-for-ecommerce'),
         'https://camoo.cm/#comptcamoo-pay',
-        __('Do you have any questions or requests?', 'camoo-pay-for-woocommerce'),
-        'https://github.com/camoo/camoo-pay-for-woocommerce',
-        __('Do you like our plugin and can recommend to others.', 'camoo-pay-for-woocommerce')
+        __('Do you have any questions or requests?', 'camoo-pay-for-ecommerce'),
+        'https://github.com/camoo/camoo-pay-for-ecommerce',
+        __('Do you like our plugin and can recommend to others.', 'camoo-pay-for-ecommerce')
     ),
     '1.0'
 )
