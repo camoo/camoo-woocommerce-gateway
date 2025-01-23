@@ -139,8 +139,8 @@ if (!class_exists(PluginAdmin::class)) {
                         absint(wp_unslash($order_id))),
                     'woocommerce_camoo_pay_check_status'
                 ),
-                'name' => __('Check status', 'camoo-pay-for-woocommerce'),
-                'title' => __('Check remote order status', 'camoo-pay-for-woocommerce'),
+                'name' => __('Check status', 'camoo-pay-for-ecommerce'),
+                'title' => __('Check remote order status', 'camoo-pay-for-ecommerce'),
                 'action' => 'check',
             ];
 
@@ -179,8 +179,8 @@ if (!class_exists(PluginAdmin::class)) {
             $new_columns = (is_array($columns)) ? $columns : [];
             unset($new_columns['wc_actions']);
 
-            $new_columns['camoo_pay_merchant_reference_id'] = __('CamooPay Reference ID', 'camoo-pay-for-woocommerce');
-            $new_columns['camoo_pay_order_transaction_id'] = __('CamooPay Transaction ID', 'camoo-pay-for-woocommerce');
+            $new_columns['camoo_pay_merchant_reference_id'] = __('CamooPay Reference ID', 'camoo-pay-for-ecommerce');
+            $new_columns['camoo_pay_order_transaction_id'] = __('CamooPay Transaction ID', 'camoo-pay-for-ecommerce');
 
             $new_columns['wc_actions'] = $columns['wc_actions'];
 

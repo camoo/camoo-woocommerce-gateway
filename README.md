@@ -18,16 +18,16 @@ The usage of this plugin is completely free. You have to just have a camoo accou
 # Installation
 We assume you already installed WooCommerce and configured it successfully
 
-1. Upload `camoo-pay-for-woocommerce` to the `/wp-content/plugins/` directory
+1. Upload `camoo-pay-for-ecommerce` to the `/wp-content/plugins/` directory
 
    Install Using GIT
 ```sh
 cd wp-content/plugins
 
-git clone https://github.com/camoo/camoo-woocommerce-gateway.git camoo-pay-for-woocommerce
+git clone https://github.com/camoo/camoo-woocommerce-gateway.git camoo-pay-for-ecommerce
 
 # install dependencies
-cd camoo-pay-woocommerce-gateway
+cd camoo-pay-for-ecommerce
 composer install
 ```
 

@@ -1,8 +1,8 @@
-=== CamooPay for WooCommerce - Mobile Money Gateway ===
+=== CamooPay for e-Commerce - Mobile Money Gateway ===
 Contributors: camoo
-Tags: Mobile Money, Orange Money, e-Commerce, Cameroon, MTN, Orange
+Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
 Requires at least: 4.8
-Requires Plugins: woocommerce
+Requires Plugins: e-Commerce
 Tested up to: 6.7
 Requires PHP: 8.1
 Stable tag: 1.0
@@ -12,19 +12,19 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 A secure and seamless plugin to receive and manage Cash, Mobile, and Card payments in Cameroon on your e-shop or website
 
 == Description ==
-**This is the Mobile Money payment gateway for WooCommerce.**
+**This is the Mobile Money payment gateway for e-Commerce.**
 
 = About the CamooPay for e-Commerce Plugin =
 CamooPay for e-commerce is an online payment service aggregator that allows web users and e-Commerce merchants to buy and sell on the Internet using international and all existing local payment methods in Cameroon.
 We enable digital organizations to accept cash, Mobile Money, or card payment via a simple, unique API permitting local businesses to participate in the vast digital economy by transforming their service offerings into the world of e-commerce sites.
 
-This fully functional plugin has been developed for WooCommerce to help merchants diminish payment friction for their customers by meeting customers where they spend more and more time online!
+This fully functional plugin has been developed for e-Commerce to help merchants diminish payment friction for their customers by meeting customers where they spend more and more time online!
 
 It works in both Sandbox (development mode) and Live (production mode)
 
 = About the plugin =
 Cameroonians avoid online buying because it lacks local payments known to consumers.
-Customers are more likely to finalize a purchase on a site that has their preferred payment options. This CamooPay for e-commerce plugin permits you to use all Mobile money payment gateways available in Cameroon with the WooCommerce plugin. This integration uses a single API. The user experience for the end-user be it tech-savvy or not, is hassle-free.
+Customers are more likely to finalize a purchase on a site that has their preferred payment options. This CamooPay for e-commerce plugin permits you to use all Mobile money payment gateways available in Cameroon with the e-Commerce plugin. This integration uses a single API. The user experience for the end-user be it tech-savvy or not, is hassle-free.
 
 = What is CamooPay? =
 A digital one-stop-shop, providing cashless payment solutions for Government, Corporations and businesses, and also providing a seamless Digital payment solution, used by third-party agents to sell digital services to end consumers.
@@ -58,7 +58,7 @@ This plugin is a FREE download.
 2. Search for "CamooPay."
 3. Install the plugin by pressing the "Install" button.
 4. Activate the plugin by pressing the "Activate" button.
-5. Open the settings page for WooCommerce and click the "Payments" tab.
+5. Open the settings page for e-Commerce and click the "Payments" tab.
 6. Click on the line for "CamooPay for e-commerce Payment."
 7. Configure your CamooPay for e-commerce Gateway settings.
 
