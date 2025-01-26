@@ -2,6 +2,7 @@
 
 namespace Camoo\Pay\WooCommerce;
 
+use Camoo\Pay\WooCommerce\Admin\Enum\MetaKeysEnum;
 use Camoo\Payment\Api\AccountApi;
 use Camoo\Payment\Api\PaymentApi;
 use Camoo\Payment\Enum\Status;
@@ -29,24 +30,23 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
     private bool $testMode;
 
-    /** @var Logger\Logger $logger */
-    private $logger;
+    private Logger\Logger $logger;
 
     public function __construct()
     {
-        $this->id = Plugin::WC_CAMOO_PAY_GATEWAY_ID;
         $this->icon = null;
         $this->has_fields = true;
+        $this->id = Plugin::WC_CAMOO_PAY_GATEWAY_ID;
 
-        $this->init_form_fields();
         $this->init_settings();
+        $this->init_form_fields();
 
         $this->title = esc_html($this->get_option('title'));
+        $this->description = esc_html($this->get_option('description'));
         $this->method_title = esc_html($this->get_option('method_title'));
         $this->method_description = esc_html($this->get_option('description'));
         $this->enabled = sanitize_text_field($this->get_option('enabled'));
         $this->testMode = 'yes' === sanitize_text_field($this->get_option('test_mode'));
-        $this->description = esc_html($this->get_option('description'));
         $this->instructions = esc_html($this->get_option('instructions'));
 
         $this->consumerKey = sanitize_text_field($this->get_option('camoo_pay_key') ?? '');
@@ -81,7 +81,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                     'woocommerce'
                 ),
                 'default' => __(
-                    'Pay with your mobile phone via CamooPay for e-commerce payment gateway.',
+                    'Accept payments via Mobile Money with CamooPay, the e-commerce payment gateway.',
                     'camoo-pay-for-ecommerce'
                 ),
                 'desc_tip' => true,
@@ -91,14 +91,6 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 'type' => 'textarea',
                 'description' => __('Instructions that will be added to the thank you page.', 'woocommerce'),
                 'default' => __('Secured Payment with CamooPay for e-commerce', 'camoo-pay-for-ecommerce'),
-                'desc_tip' => true,
-            ],
-            'test_mode' => [
-                'title' => __('Test mode', 'camoo-pay-for-ecommerce'),
-                'label' => __('Enable Test Mode', 'camoo-pay-for-ecommerce'),
-                'type' => 'checkbox',
-                'description' => __('Place the payment gateway in test mode using test API keys.', 'camoo-pay-for-ecommerce'),
-                'default' => 'no',
                 'desc_tip' => true,
             ],
             'camoo_pay_currency' => [
@@ -149,20 +141,18 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
     public function validate_fields()
     {
-        if (empty($_POST['billing_first_name'])) {
-            wc_add_notice(esc_html__('First name is required!', 'camoo-pay-for-ecommerce'), 'error');
-
-            return false;
-        }
-
         if ('yes' === $this->enabled) {
-            if (empty($_POST['camoo_pay_phone_number'])) {
-                wc_add_notice(esc_html__('Mobile Money number is required.', 'camoo-pay-for-ecommerce'), 'error');
+            $phone = sanitize_text_field(wp_unslash($_POST['camoo_pay_phone_number'] ?? ''));
+            if (empty($phone)) {
+                wc_add_notice(
+                    esc_html__('Mobile Money number is required.', 'camoo-pay-for-ecommerce'),
+                    'error'
+                );
 
                 return false;
             }
 
-            if (!preg_match('/^\d{9}$/', sanitize_text_field($_POST['camoo_pay_phone_number']))) {
+            if (!preg_match('/^\d{9}$/', $phone)) {
                 wc_add_notice(esc_html__(
                     'Invalid Mobile Money number format. Please enter a valid 9-digit phone number.',
                     'camoo-pay-for-ecommerce'
@@ -180,28 +170,36 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         if ('yes' === $this->enabled) {
             // Display the phone number field only if CamooPay is selected
-            echo '<div class="form-row form-row-wide validate-required validate-phone">
-                    <label for="camoo_pay_phone_number">' . esc_html__('Mobile Money number', 'camoo-pay-for-ecommerce') .
-                ' <span class="required">*</span></label>
-                    <span class="woocommerce-input-wrapper">
-                    <input type="number" class="input-text" name="camoo_pay_phone_number" id="camoo_pay_phone_number"
-                    autocomplete="tel"
-                    aria-required="true"
-                     autocapitalize="off"
-                     maxlength="9"
-                    placeholder="' . esc_html__('Enter your Mobile Money number', 'camoo-pay-for-ecommerce') . '" />
-                    </span>
-                  </div>';
+            echo '<div class="form-row form-row-wide validate-required validate-phone" style="margin-bottom: 20px;">
+                <label for="camoo_pay_phone_number" style="font-size: 14px; font-weight: bold;">' .
+                esc_html__('Mobile Money number', 'camoo-pay-for-ecommerce') .
+                ' <span class="required" style="color: red;">*</span></label>
+                <span class="woocommerce-input-wrapper" style="width: 100%; display: flex; justify-content: center;">
+                <input type="number" class="input-text" name="camoo_pay_phone_number" id="camoo_pay_phone_number"
+                autocomplete="tel"
+                aria-required="true"
+                autocapitalize="off"
+                maxlength="9"
+                placeholder="' . esc_html__('Enter your Mobile Money number', 'camoo-pay-for-ecommerce') . '" 
+                style="width: 100%; padding: 10px; font-size: 14px; border-radius: 5px; border: 2px solid #ddd; background-color: #f9f9f9; margin-top: 8px;"/>
+                </span>
+              </div>';
+
+            $icon_momo = plugin_dir_url(__FILE__) . 'assets/images/online_momo.png';
+            // Add the image to emphasize the Mobile Money payment option, with tooltip
+            echo '<div class="camoo-pay-image" style="text-align:center; margin-top:20px; margin-bottom: 20px;">
+                <img src="' . esc_url($icon_momo) . '" alt="Mobile Money Payment" title="' . esc_attr__('Pay with Cameroon Orange or MTN Mobile Money', 'camoo-pay-for-ecommerce') . '" 
+                style="max-width:80%; height:auto; border: 3px solid #50575e; border-radius: 15px; padding:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
+              </div>';
         }
     }
 
     public function process_admin_options(): bool
     {
-
         $postData = $this->get_post_data();
         $consumerKey = sanitize_text_field($postData['woocommerce_wc_camoo_pay_camoo_pay_key']);
         $consumerSecret = sanitize_text_field($postData['woocommerce_wc_camoo_pay_camoo_pay_secret']);
-        $client = Client::create($consumerKey, $consumerSecret);
+        $client = Client::create(trim($consumerKey), trim($consumerSecret));
         $accountApi = new AccountApi($client);
         $account = null;
         try {
@@ -217,14 +215,17 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             $this->logger->info(
                 __FILE__,
                 __LINE__,
-                __('CamooPay for wooCommerce setup successfully', 'camoo-pay-for-ecommerce')
+                __('CamooPay for WooCommerce setup successfully', 'camoo-pay-for-ecommerce')
             );
 
         } else {
             $this->logger->error(
                 __FILE__,
                 __LINE__,
-                __('CamooPay for wooCommerce could not be setup', 'camoo-pay-for-ecommerce')
+                __(
+                    'CamooPay for WooCommerce could not be setup. Please check your API credentials.',
+                    'camoo-pay-for-ecommerce'
+                )
             );
         }
 
@@ -236,31 +237,49 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         try {
             $wcOrder = $this->getWcOrder($order_id);
             $merchantReferenceId = wp_generate_uuid4();
+
+            // Handle a guest checkout scenario (unlogged-in user)
+            if (!is_user_logged_in()) {
+                // For unlogged-in users, retrieve details from the payment form
+                $postData = $this->get_post_data();
+                $firstName = sanitize_text_field($postData['billing_first_name'] ?? '');
+                $lastName = sanitize_text_field($postData['billing_last_name'] ?? '');
+                $email = sanitize_email($postData['billing_email'] ?? '');
+                $phoneNumber = sanitize_text_field($postData['billing_phone'] ?? '');
+
+                // Update the WooCommerce order with guest details
+                $wcOrder->set_billing_first_name($firstName);
+                $wcOrder->set_billing_last_name($lastName);
+                $wcOrder->set_billing_email($email);
+                $wcOrder->set_billing_phone($phoneNumber);
+            }
+
+            // Prepare order data
             $orderData = $this->prepareOrderData($wcOrder, $merchantReferenceId);
 
             $orderData['shopping_cart_details'] = wp_json_encode($orderData['shopping_cart_details']);
             $payment = $this->placeOrder($orderData);
-            $this->handleOrderResponse($wcOrder, $merchantReferenceId, $payment);
+            $this->handleOrderResponse($wcOrder, $payment);
 
             $status = Status::tryFrom(strtoupper($payment->status));
-
             $fallbackStatus = $payment === null ? Status::FAILED : Status::IN_PROGRESS;
             $status = $status ?? $fallbackStatus;
 
-            // Only add the notice if the payment is successful
+            $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value, sanitize_text_field($merchantReferenceId));
+            $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_ORDER_STATUS->value, sanitize_text_field($status->value));
+
+            // Add the notice if the payment is successful
             if ($payment !== null) {
                 wc_add_notice(
-                    __(
-                        'Veuillez suivre les instructions Mobile Money pour completer votre payment',
-                        'camoo-pay-for-ecommerce'
-                    ),
+                    __('Thank you for your order. Please check your phone for payment instructions.', 'camoo-pay-for-ecommerce'),
                     'notice'
                 );
+                $wcOrder->update_meta_data(MetaKeysEnum::CAMOO_PAYMENT_TRANSACTION_ID->value, $payment->id);
             }
+            $wcOrder->save();
 
             // Return to site
-            $returnUrl = get_permalink(wc_get_page_id('shop')) . '?trx=' . $merchantReferenceId . '&status='
-                . strtolower($status->value);
+            $returnUrl = get_permalink(wc_get_page_id('shop')) . '?trx=' . $merchantReferenceId . '&status=' . strtolower($status->value);
 
             return [
                 'result' => $payment === null ? 'failure' : 'success',
@@ -287,9 +306,9 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             ], 400);
         }
 
-        $paymentHistory = Plugin::getPaymentHistoryByReferenceId($merchantReferenceId);
+        $order = Plugin::getPaymentHistoryByReferenceId($merchantReferenceId);
 
-        $orderId = (int)$paymentHistory->wc_order_id;
+        $orderId = (int)$order->get_id();
         if (empty($orderId)) {
             $this->logger->error(__FILE__, __LINE__, 'onNotification:: Order Id not found');
 
@@ -313,12 +332,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             ], 400);
         }
 
-        $order = wc_get_order($orderId);
-        $oldStatus = '';
-        if ($order) {
-            $oldStatus = $order->get_status();
-            Plugin::processWebhookStatus($order, sanitize_text_field($status), $merchantReferenceId);
-        }
+        $oldStatus = $order->get_status();
+        Plugin::processWebhookStatus($order, sanitize_text_field($status), $merchantReferenceId);
 
         $this->logger->info(
             __FILE__,
@@ -338,29 +353,28 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $icon_url = plugin_dir_url(__FILE__) . 'assets/images/camoo-pay.png';
 
         $icon_html = '<img width="144" height="40" src="' . esc_url($icon_url) . '" alt="' .
-            esc_attr__('CamooPay for e-commerce acceptance mark', 'camoo-pay-for-ecommerce') . '" />';
+            esc_attr__('CamooPay for e-commerce acceptance mark', 'camoo-pay-for-ecommerce') . '"
+              style="max-width:80%; height:auto; 
+                     border: 3px solid #73d8fd00; border-radius: 10px;"
+             />';
 
         // Apply filters for compatibility with WooCommerce
         return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
     }
 
-    protected function logCamooPayPayment(int $orderId, string $merchantReferenceId, string $orderTransactionId): void
+    /**
+     * By default, the gateway does not support refunds at the moment.
+     */
+    public function can_refund_order($order): bool
     {
-        global $wpdb;
-
-        $wpdb->insert(
-            $wpdb->prefix . 'wc_camoo_pay_payments',
-            [
-                'wc_order_id' => absint(wp_unslash($orderId)),
-                'order_transaction_id' => sanitize_text_field($orderTransactionId),
-                'merchant_reference_id' => sanitize_text_field($merchantReferenceId),
-            ]
-        );
+        return false;
     }
 
     private function registerHooks(): void
     {
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+
+        // ADD refund hook
     }
 
     private function getWcOrder(int $orderId): WC_Order
@@ -368,7 +382,11 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         return wc_get_order(absint(wp_unslash($orderId)));
     }
 
-    /** @throws Exception */
+    /**
+     * @param array<string, mixed> $orderData
+     *
+     * @throws Exception
+     */
     private function placeOrder(array $orderData): ?Payment
     {
         $client = Client::create($this->consumerKey, $this->consumerSecret);
@@ -386,7 +404,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     }
 
     /**
-     * Normalize the amount for XAF (FCFA BEAC) to ensure it's a valid multiple of 25.
+     * Normalize the amount for XAF (FCFA BEAC) to ensure it's a valid multiple of 25,
+     * but only adjust amounts that are not already divisible by 5.
      *
      * @param float $amount The amount to be normalized.
      *
@@ -394,15 +413,31 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
      */
     private function normalizeXafAmount(float $amount): float
     {
-        // Round the amount to the nearest multiple of 25
-        return round($amount / 25) * 25;
+        // Check if the amount is divisible by 5
+        if ($amount % 5 !== 0) {
+            // Round the amount to the nearest multiple of 25
+            return round($amount / 25) * 25;
+        }
+
+        // Return the amount as is if it's already divisible by 5
+        return $amount;
     }
 
+    private function cleanUpPhone(string $rawData): string
+    {
+        $phone = sanitize_text_field($rawData);
+
+        return preg_replace('/\D/', '', $phone);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     private function prepareOrderData(WC_Order $wcOrder, string $merchantReferenceId): array
     {
         $order_data = $wcOrder->get_data();
         $post_data = $this->get_post_data();
-        $phoneNumber = sanitize_text_field($post_data['camoo_pay_phone_number']);
+        $phoneNumber = $this->cleanUpPhone($post_data['camoo_pay_phone_number']);
         $orderData = [
             'external_reference' => $merchantReferenceId,
             'phone_number' => $phoneNumber,
@@ -432,18 +467,13 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         return $orderData;
     }
 
-    private function handleOrderResponse(WC_Order $wcOrder, string $merchantReferenceId, ?Payment $payment = null): void
+    private function handleOrderResponse(WC_Order $wcOrder, ?Payment $payment = null): void
     {
         if (null === $payment) {
             return;
         }
         $wcOrder->update_status('on-hold', __('Awaiting CamooPay payment confirmation', 'camoo-pay-for-ecommerce'));
         WC()->cart->empty_cart();
-        $this->logCamooPayPayment(
-            $wcOrder->get_id(),
-            sanitize_text_field($merchantReferenceId),
-            sanitize_text_field($payment->id)
-        );
 
         $wcOrder->add_order_note(
             __('Your order is under process. Thank you!', 'camoo-pay-for-ecommerce'),

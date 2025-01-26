@@ -1,17 +1,18 @@
 # CamooPay - Mobile Money Gateway for WooCommerce
 CamooPay Gateway for WooCommerce is a simple and powerful Payment plugin for WordPress
 
+[![CamooPay](includes/assets/images/camoo-pay.webp)](https://www.camoo.cm)
+
 You can add to WordPress, the ability to receive easily Mobile Money payment from Cameroon
 
-
 The usage of this plugin is completely free. You have to just have a camoo account:
-* [Sign up](https://camoo.cm/) for a free account
+* [Sign up](https://www.camoo.cm/) for a free account
 * Ask Camoo SARL Team for consumerKey and consumerSecret
 
 # Requirements
 For the plugin to work, you need the following:
 * WordPress 6.0 or later
-* WooCommerce 4.8 or later
+* WooCommerce 3.3 or later
 * PHP 8.1 or later
 
 # Features
@@ -45,4 +46,4 @@ composer install
 6. Click on the sub tab for \"CamooPay for e-commerce Payment\."
 7. Configure your CamooPay Gateway settings.
 
-#### More details can be found on the [documentation website](https://camoo.cm)
+#### More details can be found on the [documentation website](https://www.camoo.cm)

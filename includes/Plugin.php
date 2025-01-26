@@ -8,6 +8,8 @@
 
 namespace Camoo\Pay\WooCommerce;
 
+use Automattic\WooCommerce\Utilities\FeaturesUtil;
+use Camoo\Pay\WooCommerce\Admin\Enum\MetaKeysEnum;
 use Camoo\Pay\WooCommerce\Admin\PluginAdmin;
 use Camoo\Payment\Api\PaymentApi;
 use Camoo\Payment\Enum\Status;
@@ -16,6 +18,7 @@ use Camoo\Payment\Models\Payment;
 use Throwable;
 use WC_Geolocation;
 use WC_Order;
+use WC_Order_Query;
 use WC_Order_Refund;
 
 defined('ABSPATH') || exit;
@@ -46,7 +49,6 @@ if (!class_exists(Plugin::class)) {
 
         protected $version;
 
-
         public function __construct($pluginPath, $adapterName, $adapterFile, $description = '', $version = null)
         {
             $this->id = basename($pluginPath, '.php');
@@ -73,6 +75,7 @@ if (!class_exists(Plugin::class)) {
         {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
             require_once __DIR__ . '/Install.php';
+            require_once __DIR__ . '/admin/Enum/MetaKeysEnum.php';
             // do not register when WooCommerce is not enabled
             if (!is_plugin_active('woocommerce/woocommerce.php')) {
                 return;
@@ -88,11 +91,27 @@ if (!class_exists(Plugin::class)) {
             );
             add_action('plugins_loaded', [$this, 'onInit']);
             add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_block_camoo_pay_css_scripts']);
-
             register_deactivation_hook($this->pluginPath, [$this, 'route_status_plugin_deactivate']);
+
+            add_action('before_woocommerce_init', [__CLASS__, 'camoo_pay_hpos_compatibility']);
+
             if (is_admin()) {
                 PluginAdmin::instance()->register();
             }
+        }
+
+        public static function camoo_pay_hpos_compatibility(): void
+        {
+
+            if (!class_exists(FeaturesUtil::class)) {
+                return;
+            }
+
+            FeaturesUtil::declare_compatibility(
+                'custom_order_tables',
+                plugin_dir_path(__DIR__) . 'camoo-pay-for-ecommerce.php',
+            );
+
         }
 
         public function route_status_plugin_deactivate(): void
@@ -132,7 +151,8 @@ if (!class_exists(Plugin::class)) {
                 [
                     'methods' => 'GET',
                     'callback' => [new WC_CamooPay_Gateway(), 'onNotification'],
-                ]
+                    'permission_callback' => '__return_true',
+                ],
             );
 
             flush_rewrite_rules();
@@ -175,22 +195,33 @@ if (!class_exists(Plugin::class)) {
 
         public static function getPaymentHistoryByReferenceId(string $merchantReferenceId): array|null|object
         {
-            global $wpdb;
             if (!wp_is_uuid(sanitize_text_field($merchantReferenceId))) {
                 return null;
             }
 
-            $db_prepare = $wpdb->prepare(
-                "SELECT * FROM `{$wpdb->prefix}wc_camoo_pay_payments` WHERE `merchant_reference_id` = %s",
-                $merchantReferenceId
-            );
-            $payment = $wpdb->get_row($db_prepare);
+            // Create a query to find orders by the custom meta-key
+            $args = [
+                'limit' => 1,
+                'meta_query' => [
+                    [
+                        'key' => MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value,
+                        'value' => sanitize_text_field($merchantReferenceId),
+                        'compare' => '=',
+                    ],
+                ],
+            ];
 
-            if (!$payment) {
-                return null;
+            // Run the query
+            $order_query = new WC_Order_Query($args);
+            $orders = $order_query->get_orders();
+
+            // Since the merchantReferenceId is unique, we expect only one result
+            if (!empty($orders)) {
+                // Get the first order (the only one)
+                return $orders[0];
             }
 
-            return $payment;
+            return null;  // Return null if no matching order is found
         }
 
         public static function getLanguageKey(): string
@@ -295,25 +326,20 @@ if (!class_exists(Plugin::class)) {
 
         private static function applyStatusChange(Status $status, string $referenceId, ?float $fees = null): void
         {
-            global $wpdb;
+
+            $order = Plugin::getPaymentHistoryByReferenceId($referenceId);
+
             $remoteIp = WC_Geolocation::get_ip_address();
-            $setData = [
-                'status_date' => current_time('mysql'),
-                'status' => sanitize_title($status->value),
-            ];
+
+            $order->update_meta_data(MetaKeysEnum::PAYMENT_ORDER_STATUS->value, sanitize_title($status->value));
+            $order->update_meta_data(MetaKeysEnum::PAYMENT_NOTIFIED_AT->value, current_time('mysql'));
             if ($fees) {
-                $setData['fee'] = $fees;
+                $order->update_meta_data(MetaKeysEnum::PAYMENT_FEE->value, $fees);
             }
             if ($remoteIp) {
-                $setData['remote_ip'] = sanitize_text_field($remoteIp);
+                $order->update_meta_data(MetaKeysEnum::PAYMENT_BUYER_IP->value, sanitize_text_field($remoteIp));
             }
-            $wpdb->update(
-                $wpdb->prefix . 'wc_camoo_pay_payments',
-                $setData,
-                [
-                    'merchant_reference_id' => sanitize_text_field($referenceId),
-                ]
-            );
+            $order->save();
 
             /**
              * Executes the hook camoo_pay_after_status_change where ever it's defined.
