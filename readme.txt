@@ -1,8 +1,8 @@
 === CamooPay for e-Commerce - Mobile Money Gateway ===
 Contributors: camoo
 Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
-Requires at least: 4.8
-Requires Plugins: e-Commerce
+Requires at least: 6.0
+Requires Plugins: woocommerce
 Tested up to: 6.7
 Requires PHP: 8.1
 Stable tag: 1.0
@@ -28,7 +28,9 @@ Customers are more likely to finalize a purchase on a site that has their prefer
 
 = What is CamooPay? =
 A digital one-stop-shop, providing cashless payment solutions for Government, Corporations and businesses, and also providing a seamless Digital payment solution, used by third-party agents to sell digital services to end consumers.
-The CamooPay platform Boasts of being a major partner with giant service providers in Cameroon such as ENEO (Prepaid and Postpaid), CamWater, MTN, Orange, Yoomee, Canal+, and more. Its reliability, invulnerable security, and efficiency are clear enough via its partnership with GIMAC-the interoperability switch of BEAC (the Bank Of Central African States), where CamooPay serves as the lone digital service aggregator for the entire CEMAC(Central African Economic and Monetary Community) region.
+
+= Does CamooPay work with High Performance Order Storage (HPOS)? =
+Yes! This plugin is fully compatible with WooCommerce's High Performance Order Storage (HPOS) feature.
 
 = Features =
 * Pay with Cameroon MTN Mobile Money
@@ -65,14 +67,14 @@ This plugin is a FREE download.
 More details can be found on the [documentation website](https://camoo.cm)
 
 = Minimum Requirements =
-* WordPress version 4.7 or greater.
-* PHP version 7.2 or greater.
-* MySQL version 5.0 or greater.
+* WordPress version 6.0 or greater.
+* PHP version 8.1 or greater.
+* MySQL version 5.7 or greater.
 
 = Recommended Requirements =
 * The Latest WordPress version.
 * PHP version 8.1 or greater.
-* MySQL version 6.7 or greater.
+* MySQL version 5.7 or greater.
 
 == Upgrade Notice ==
 
@@ -89,5 +91,5 @@ N/A
 
 == Changelog ==
 
-= 1.0: January 22, 2025 =
+= 1.0: January 26, 2025 =
 * Start plugin

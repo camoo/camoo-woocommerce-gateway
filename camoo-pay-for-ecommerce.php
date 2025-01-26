@@ -7,8 +7,8 @@
  * Description: Receive Mobile Money payments on your store using CamooPay for WooCommerce.
  * Version: 1.0
  * Tested up to: 6.7
- * WC requires at least: 3.2
- * WC tested up to: 8.9.1
+ * WC requires at least: 3.3
+ * WC tested up to: 9.6.0
  * Author: Camoo Sarl
  * Author URI: https://www.camoo.cm/
  * Developer: Camoo Sarl
