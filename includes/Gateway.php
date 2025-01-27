@@ -14,6 +14,7 @@ use Throwable;
 
 use function wc_add_notice;
 
+use WC_Geolocation;
 use WC_Order;
 use WC_Payment_Gateway;
 use WP_REST_Response;
@@ -308,7 +309,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
         $order = Plugin::getPaymentHistoryByReferenceId($merchantReferenceId);
 
-        $orderId = (int)$order->get_id();
+        $orderId = (int)($order?->get_id() ?? 0);
         if (empty($orderId)) {
             $this->logger->error(__FILE__, __LINE__, 'onNotification:: Order Id not found');
 
@@ -425,14 +426,13 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
     private function cleanUpPhone(string $rawData): string
     {
-        $phone = sanitize_text_field($rawData);
+        /** @var string $phone */
+        $phone = wc_clean(wp_unslash($rawData));
 
         return preg_replace('/\D/', '', $phone);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function prepareOrderData(WC_Order $wcOrder, string $merchantReferenceId): array
     {
         $order_data = $wcOrder->get_data();
@@ -444,6 +444,12 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             'amount' => $this->normalizeXafAmount((float)$order_data['total']),
             'notification_url' => Plugin::get_webhook_url('notification'),
             'shopping_cart_details' => [
+                'user_browser_data' => [
+                    'platform' => 'WooCommerce/' . wc()->version,
+                    'ip' => WC_Geolocation::get_ip_address(),
+                    'user_agent' => wc_get_user_agent(),
+                    'php_version' => PHP_VERSION,
+                ],
                 'email' => $order_data['billing']['email'],
                 'customerName' => $order_data['billing']['first_name'] . ' ' . $order_data['billing']['last_name'],
                 'description' => __('Payment from', 'camoo-pay-for-ecommerce') . ' ' . get_bloginfo('name'),

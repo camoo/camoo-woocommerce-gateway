@@ -3,7 +3,7 @@
 /**
  * Plugin Name: CamooPay for e-Commerce - Mobile Money Gateway
  * Requires Plugins: woocommerce
- * Plugin URI: https://camoo.cm/
+ * Plugin URI: https://www.camoo.cm/
  * Description: Receive Mobile Money payments on your store using CamooPay for WooCommerce.
  * Version: 1.0
  * Tested up to: 6.7
@@ -14,7 +14,7 @@
  * Developer: Camoo Sarl
  * Developer URI: http://www.camoo.cm/
  * Text Domain: camoo-pay-for-ecommerce
- * Domain Path: /languages
+ * Domain Path: /includes/languages
  * Requires at least: 6.0
  * Requires PHP: 8.1
  * License: GPLv2 or later
@@ -37,7 +37,7 @@ require_once __DIR__ . '/includes/admin/PluginAdmin.php';
     sprintf(
         '%s<br/><a href="%s" target="_blank">%s</a><br/><a href="%s" target="_blank">%s</a>',
         __('CamooPay for e-commerce payment gateway', 'camoo-pay-for-ecommerce'),
-        'https://camoo.cm/#comptcamoo-pay',
+        'https://camoo.cm/#camoo-pay',
         __('Do you have any questions or requests?', 'camoo-pay-for-ecommerce'),
         'https://github.com/camoo/camoo-pay-for-ecommerce',
         __('Do you like our plugin and can recommend to others.', 'camoo-pay-for-ecommerce')

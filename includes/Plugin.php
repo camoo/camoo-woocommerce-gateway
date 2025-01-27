@@ -152,6 +152,26 @@ if (!class_exists(Plugin::class)) {
                     'methods' => 'GET',
                     'callback' => [new WC_CamooPay_Gateway(), 'onNotification'],
                     'permission_callback' => '__return_true',
+                    'args' => [
+                        'status' => [
+                            'required' => true,
+                            'validate_callback' => function ($param) {
+                                return in_array($param, array_map(fn ($status) => strtolower($status->value), Status::cases()));
+                            },
+                        ],
+                        'trx' => [
+                            'required' => true,
+                            'validate_callback' => 'wp_is_uuid',
+                        ],
+                        'status_time' => [
+                            'required' => false,
+                            'validate_callback' => 'is_string',
+                        ],
+                        'payment_id' => [
+                            'required' => false,
+                            'validate_callback' => 'is_string',
+                        ],
+                    ],
                 ],
             );
 
