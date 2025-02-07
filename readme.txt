@@ -1,10 +1,8 @@
 === CamooPay for e-Commerce - Mobile Money Gateway ===
 Contributors: camoo
 Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
-Requires at least: 6.0
 Requires Plugins: woocommerce
 Tested up to: 6.7
-Requires PHP: 8.1
 Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html

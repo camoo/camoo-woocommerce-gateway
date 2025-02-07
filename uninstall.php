@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Uninstalling CamooPay for eCommerce - Mobile Money Gateway, deletes tables, and options.
  *
@@ -18,9 +20,6 @@ global $wpdb;
 // Delete plugin options
 delete_option('wc_camoo_pay_db_version');
 $wpdb->query("DELETE FROM {$wpdb->options} WHERE `option_name` LIKE 'woocommerce_wc_camoo_pay%';");
-
-// Drop custom database table
-$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}wc_camoo_pay_payments");
 
 // Remove the gateway from the WooCommerce payment gateways list
 add_filter('woocommerce_payment_gateways', 'remove_camoo_pay_gateway');

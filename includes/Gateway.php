@@ -61,50 +61,50 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         $wc_camoo_pay_settings = [
             'enabled' => [
-                'title' => __('Enable/Disable', 'camoo-pay-for-ecommerce'),
-                'label' => __('Enable CamooPay for e-commerce Payment', 'camoo-pay-for-ecommerce'),
+                'title' => esc_html__('Enable/Disable', 'camoo-pay-for-ecommerce'),
+                'label' => esc_html__('Enable CamooPay for e-commerce Payment', 'camoo-pay-for-ecommerce'),
                 'type' => 'checkbox',
                 'description' => '',
                 'default' => 'no',
             ],
             'title' => [
-                'title' => __('Title', 'woocommerce'),
+                'title' => esc_html__('Title', 'camoo-pay-for-ecommerce'),
                 'type' => 'text',
-                'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
-                'default' => __('CamooPay for e-commerce Payment.', 'camoo-pay-for-ecommerce'),
+                'description' => esc_html__('This controls the title which the user sees during checkout.', 'camoo-pay-for-ecommerce'),
+                'default' => esc_html__('CamooPay for e-commerce Payment.', 'camoo-pay-for-ecommerce'),
                 'desc_tip' => true,
             ],
             'description' => [
-                'title' => __('Description', 'woocommerce'),
+                'title' => esc_html__('Description', 'camoo-pay-for-ecommerce'),
                 'type' => 'textarea',
-                'description' => __(
+                'description' => esc_html__(
                     'This controls the description which the user sees during checkout.',
-                    'woocommerce'
+                    'camoo-pay-for-ecommerce'
                 ),
-                'default' => __(
+                'default' => esc_html__(
                     'Accept payments via Mobile Money with CamooPay, the e-commerce payment gateway.',
                     'camoo-pay-for-ecommerce'
                 ),
                 'desc_tip' => true,
             ],
             'instructions' => [
-                'title' => __('Instructions', 'woocommerce'),
+                'title' => esc_html__('Instructions', 'camoo-pay-for-ecommerce'),
                 'type' => 'textarea',
-                'description' => __('Instructions that will be added to the thank you page.', 'woocommerce'),
-                'default' => __('Secured Payment with CamooPay for e-commerce', 'camoo-pay-for-ecommerce'),
+                'description' => esc_html__('Instructions that will be added to the thank you page and emails.', 'camoo-pay-for-ecommerce'),
+                'default' => esc_html__('Secured Payment with CamooPay for e-commerce.', 'camoo-pay-for-ecommerce'),
                 'desc_tip' => true,
             ],
             'camoo_pay_currency' => [
-                'title' => __('Currency', 'woocommerce'),
-                'label' => __('CamooPay Currency', 'camoo-pay-for-ecommerce'),
+                'title' => esc_html__('Currency', 'camoo-pay-for-ecommerce'),
+                'label' => esc_html__('CamooPay Currency', 'camoo-pay-for-ecommerce'),
                 'type' => 'select',
-                'description' => __('Define the currency to place your payments', 'camoo-pay-for-ecommerce'),
+                'description' => esc_html__('Define the currency to place your payments', 'camoo-pay-for-ecommerce'),
                 'default' => 'XAF',
                 'options' => ['XAF' => __('CFA-Franc BEAC', 'camoo-pay-for-ecommerce')],
                 'desc_tip' => true,
             ],
             'api_details' => [
-                'title' => __('API credentials', 'woocommerce'),
+                'title' => esc_html__('API credentials', 'camoo-pay-for-ecommerce'),
                 'type' => 'title',
                 'description' => wp_kses(
                     esc_attr__(
@@ -123,16 +123,16 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 ),
             ],
             'camoo_pay_key' => [
-                'title' => __('Consumer Key', 'camoo-pay-for-ecommerce'),
+                'title' => esc_html__('Consumer Key', 'camoo-pay-for-ecommerce'),
                 'type' => 'text',
-                'description' => __('Get your API Consumer Key from CamooPay for e-commerce.', 'camoo-pay-for-ecommerce'),
+                'description' => esc_html__('Get your API Consumer Key from CamooPay for e-commerce.', 'camoo-pay-for-ecommerce'),
                 'default' => '',
                 'desc_tip' => true,
             ],
             'camoo_pay_secret' => [
-                'title' => __('Consumer Secret', 'camoo-pay-for-ecommerce'),
+                'title' => esc_html__('Consumer Secret', 'camoo-pay-for-ecommerce'),
                 'type' => 'password',
-                'description' => __('Get your API Consumer Secret from CamooPay for e-commerce.', 'camoo-pay-for-ecommerce'),
+                'description' => esc_html__('Get your API Consumer Secret from CamooPay for e-commerce.', 'camoo-pay-for-ecommerce'),
                 'default' => '',
                 'desc_tip' => true,
             ],

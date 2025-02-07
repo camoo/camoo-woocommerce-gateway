@@ -49,14 +49,16 @@ if (!class_exists(Plugin::class)) {
 
         protected $version;
 
+        private static ?Logger\Logger $logger = null;
+
         public function __construct($pluginPath, $adapterName, $adapterFile, $description = '', $version = null)
         {
             $this->id = basename($pluginPath, '.php');
 
             $this->pluginPath = $pluginPath;
+            $this->description = $description;
             $this->adapterName = $adapterName;
             $this->adapterFile = $adapterFile;
-            $this->description = $description;
             $this->version = $version;
             $this->optionKey = '';
             $this->settings = [
@@ -78,6 +80,13 @@ if (!class_exists(Plugin::class)) {
             require_once __DIR__ . '/admin/Enum/MetaKeysEnum.php';
             // do not register when WooCommerce is not enabled
             if (!is_plugin_active('woocommerce/woocommerce.php')) {
+                wp_admin_notice(
+                    __(
+                        'WooCommerce is not enabled. Please enable WooCommerce to use CamooPay for WooCommerce.',
+                        'camoo-pay-for-ecommerce'
+                    )
+                );
+
                 return;
             }
             register_activation_hook($this->pluginPath, [Install::class, 'install']);
@@ -139,7 +148,6 @@ if (!class_exists(Plugin::class)) {
         public function onInit(): void
         {
             $this->loadGatewayClass();
-            add_action('init', [__CLASS__, 'loadTextDomain']);
             add_action('rest_api_init', [$this, 'notification_route']);
         }
 
@@ -198,6 +206,7 @@ if (!class_exists(Plugin::class)) {
             include_once dirname(__DIR__) . '/includes/Gateway.php';
             include_once dirname(__DIR__) . '/vendor/autoload.php';
             require_once __DIR__ . '/Logger/Logger.php';
+            self::$logger = new Logger\Logger('camoo-pay-for-ecommerce', true);
         }
 
         public static function get_webhook_url($endpoint): string
@@ -216,6 +225,8 @@ if (!class_exists(Plugin::class)) {
         public static function getPaymentHistoryByReferenceId(string $merchantReferenceId): array|null|object
         {
             if (!wp_is_uuid(sanitize_text_field($merchantReferenceId))) {
+                self::$logger?->debug(__FILE__, __LINE__, 'Invalid merchant reference ID: ' . $merchantReferenceId);
+
                 return null;
             }
 
@@ -233,13 +244,25 @@ if (!class_exists(Plugin::class)) {
 
             // Run the query
             $order_query = new WC_Order_Query($args);
-            $orders = $order_query->get_orders();
+            try {
+                $orders = $order_query->get_orders();
+            } catch (Throwable) {
+                self::$logger?->debug(
+                    __FILE__,
+                    __LINE__,
+                    'Error while querying orders for merchant reference ID: ' . $merchantReferenceId
+                );
+
+                $orders = null;
+            }
 
             // Since the merchantReferenceId is unique, we expect only one result
             if (!empty($orders)) {
                 // Get the first order (the only one)
                 return $orders[0];
             }
+
+            self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' . $merchantReferenceId);
 
             return null;  // Return null if no matching order is found
         }
@@ -258,15 +281,6 @@ if (!class_exists(Plugin::class)) {
             return in_array($lang, ['fr', 'en']) ? $lang : 'en';
         }
 
-        public static function loadTextDomain(): void
-        {
-            load_plugin_textdomain(
-                'camoo-pay-for-ecommerce',
-                false,
-                dirname(plugin_basename(__FILE__)) . '/languages'
-            );
-        }
-
         public static function processWebhookStatus(
             $order,
             string $status,
@@ -275,12 +289,12 @@ if (!class_exists(Plugin::class)) {
         ): void {
             $enumStatus = Status::from(strtoupper($status));
             match ($enumStatus) {
-                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED => self::processWebhookProgress(
+                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED, Status::PENDING => self::processWebhookProgress(
                     $order,
                     $merchantReferenceId,
                     $enumStatus
                 ),
-                Status::CONFIRMED => self::processWebhookConfirmed($order, $merchantReferenceId, $payment),
+                Status::CONFIRMED, Status::SUCCESS => self::processWebhookConfirmed($order, $merchantReferenceId, $payment),
                 Status::CANCELED => self::processWebhookCanceled($order, $merchantReferenceId),
                 Status::FAILED, Status::ERRORED => self::processWebhookFailed($order, $merchantReferenceId),
             };
@@ -312,6 +326,7 @@ if (!class_exists(Plugin::class)) {
             $fees = $verifyPayment?->fees ?? null;
             self::applyStatusChange(Status::CONFIRMED, $merchantReferenceId, $fees);
             $order->add_order_note(__('CamooPay payment completed', 'camoo-pay-for-ecommerce'), true);
+            do_action('woocommerce_order_edit_status', $order->get_id(), 'completed');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -347,7 +362,13 @@ if (!class_exists(Plugin::class)) {
         private static function applyStatusChange(Status $status, string $referenceId, ?float $fees = null): void
         {
 
+            /** @var bool|WC_Order|WC_Order_Refund $order */
             $order = Plugin::getPaymentHistoryByReferenceId($referenceId);
+            if (empty($order)) {
+                self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' . $referenceId);
+
+                return;
+            }
 
             $remoteIp = WC_Geolocation::get_ip_address();
 
@@ -377,12 +398,12 @@ if (!class_exists(Plugin::class)) {
              *      * Trigger the actions by calling the 'example_callback()' function
              *      * that's hooked onto `camoo_pay_after_status_change`.
              *
-             *      * - $id is either the transaction ID or the merchant reference ID
+             *      * - $id is either the WooCommerce orderId
              *      * - $shopType is the shop invoked actually the hook
              *
              * @since 1.0
              */
-            do_action('camoo_pay_after_status_change', sanitize_text_field($referenceId), 'wc');
+            do_action('camoo_pay_after_status_change', sanitize_text_field($order->get_id()), 'wc');
         }
     }
 }
