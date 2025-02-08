@@ -149,13 +149,15 @@ if (!class_exists(PluginAdmin::class)) {
 
             /** @var WC_Order $order */
             if ($order->get_payment_method() !== Plugin::WC_CAMOO_PAY_GATEWAY_ID) {
-                self::getLogger()->debug(__FILE__, __LINE__, 'Not using CamooPay gateway for order ' . $order->get_id());
+                self::getLogger()->debug(__FILE__, __LINE__, 'Not using CamooPay gateway for order ' .
+                    wp_unslash($order->get_id()));
 
                 return $actions;
             }
 
             if (!$order->has_status(self::PENDING_STATUS_LIST)) {
-                self::getLogger()->debug(__FILE__, __LINE__, 'Order ' . $order->get_id() . ' does not have a pending status');
+                self::getLogger()->debug(__FILE__, __LINE__, 'Order ' . wp_unslash($order->get_id()) .
+                    ' does not have a pending status');
 
                 return $actions;
             }
@@ -172,7 +174,8 @@ if (!class_exists(PluginAdmin::class)) {
                 'action' => 'check',
             ];
 
-            self::getLogger()->debug(__FILE__, __LINE__, 'Check Status Button Added for Order ID ' . $order->get_id());
+            self::getLogger()->debug(__FILE__, __LINE__, 'Check Status Button Added for Order ID ' .
+                wp_unslash($order->get_id()));
 
             return $actions;
         }

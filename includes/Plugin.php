@@ -149,6 +149,7 @@ if (!class_exists(Plugin::class)) {
         {
             $this->loadGatewayClass();
             add_action('rest_api_init', [$this, 'notification_route']);
+            add_action('woocommerce_loaded', [new Media(), 'upload_image_to_media_library']);
         }
 
         public function notification_route(): void
@@ -203,8 +204,12 @@ if (!class_exists(Plugin::class)) {
             if (class_exists('\\Camoo\\Pay\\WooCommerce\\' . $this->adapterName)) {
                 return;
             }
-            include_once dirname(__DIR__) . '/includes/Gateway.php';
+
             include_once dirname(__DIR__) . '/vendor/autoload.php';
+            include_once dirname(__DIR__) . '/includes/admin/Enum/MediaEnum.php';
+            include_once dirname(__DIR__) . '/includes/Media.php';
+            include_once dirname(__DIR__) . '/includes/Gateway.php';
+
             require_once __DIR__ . '/Logger/Logger.php';
             self::$logger = new Logger\Logger('camoo-pay-for-ecommerce', true);
         }
@@ -225,7 +230,8 @@ if (!class_exists(Plugin::class)) {
         public static function getPaymentHistoryByReferenceId(string $merchantReferenceId): array|null|object
         {
             if (!wp_is_uuid(sanitize_text_field($merchantReferenceId))) {
-                self::$logger?->debug(__FILE__, __LINE__, 'Invalid merchant reference ID: ' . $merchantReferenceId);
+                self::$logger?->debug(__FILE__, __LINE__, 'Invalid merchant reference ID: ' .
+                    esc_html($merchantReferenceId));
 
                 return null;
             }
@@ -250,7 +256,7 @@ if (!class_exists(Plugin::class)) {
                 self::$logger?->debug(
                     __FILE__,
                     __LINE__,
-                    'Error while querying orders for merchant reference ID: ' . $merchantReferenceId
+                    'Error while querying orders for merchant reference ID: ' . esc_html($merchantReferenceId)
                 );
 
                 $orders = null;
@@ -262,7 +268,8 @@ if (!class_exists(Plugin::class)) {
                 return $orders[0];
             }
 
-            self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' . $merchantReferenceId);
+            self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' .
+                esc_html($merchantReferenceId));
 
             return null;  // Return null if no matching order is found
         }
@@ -365,7 +372,8 @@ if (!class_exists(Plugin::class)) {
             /** @var bool|WC_Order|WC_Order_Refund $order */
             $order = Plugin::getPaymentHistoryByReferenceId($referenceId);
             if (empty($order)) {
-                self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' . $referenceId);
+                self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' .
+                    esc_html($referenceId));
 
                 return;
             }

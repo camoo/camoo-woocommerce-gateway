@@ -2,6 +2,7 @@
 
 namespace Camoo\Pay\WooCommerce;
 
+use Camoo\Pay\WooCommerce\Admin\Enum\MediaEnum;
 use Camoo\Pay\WooCommerce\Admin\Enum\MetaKeysEnum;
 use Camoo\Payment\Api\AccountApi;
 use Camoo\Payment\Api\PaymentApi;
@@ -143,7 +144,9 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     public function validate_fields()
     {
         if ('yes' === $this->enabled) {
-            $phone = sanitize_text_field(wp_unslash($_POST['camoo_pay_phone_number'] ?? ''));
+
+            $postData = $this->get_post_data();
+            $phone = sanitize_text_field(wp_unslash($postData['camoo_pay_phone_number'] ?? ''));
             if (empty($phone)) {
                 wc_add_notice(
                     esc_html__('Mobile Money number is required.', 'camoo-pay-for-ecommerce'),
@@ -176,21 +179,35 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 esc_html__('Mobile Money number', 'camoo-pay-for-ecommerce') .
                 ' <span class="required" style="color: red;">*</span></label>
                 <span class="woocommerce-input-wrapper" style="width: 100%; display: flex; justify-content: center;">
-                <input type="number" class="input-text" name="camoo_pay_phone_number" id="camoo_pay_phone_number"
+                <input type="number" class="input-text camoo-pay-phone-input" name="camoo_pay_phone_number" id="camoo_pay_phone_number"
                 autocomplete="tel"
                 aria-required="true"
                 autocapitalize="off"
                 maxlength="9"
                 placeholder="' . esc_html__('Enter your Mobile Money number', 'camoo-pay-for-ecommerce') . '" 
-                style="width: 100%; padding: 10px; font-size: 14px; border-radius: 5px; border: 2px solid #ddd; background-color: #f9f9f9; margin-top: 8px;"/>
+                />
                 </span>
               </div>';
 
-            $icon_momo = plugin_dir_url(__FILE__) . 'assets/images/online_momo.png';
+            $icon_momo = '';
+
+            $attachment_id = get_option(MediaEnum::MOMO_IMAGE->value);
+            if ($attachment_id) {
+                $icon_momo = wp_get_attachment_image(
+                    sanitize_text_field($attachment_id),
+                    'thumbnail',
+                    false,
+                    [
+                        'class' => 'camoo-pay-mobile-money-phone-number',
+                        'alt' => esc_attr__('Mobile Money Payment', 'camoo-pay-for-ecommerce'),
+                        'title' => esc_attr__('Pay with Cameroon Orange or MTN Mobile Money', 'camoo-pay-for-ecommerce'),
+                    ]
+                );
+            }
+
             // Add the image to emphasize the Mobile Money payment option, with tooltip
-            echo '<div class="camoo-pay-image" style="text-align:center; margin-top:20px; margin-bottom: 20px;">
-                <img src="' . esc_url($icon_momo) . '" alt="Mobile Money Payment" title="' . esc_attr__('Pay with Cameroon Orange or MTN Mobile Money', 'camoo-pay-for-ecommerce') . '" 
-                style="max-width:80%; height:auto; border: 3px solid #50575e; border-radius: 15px; padding:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" />
+            echo '<div class="camoo-pay-mobile-money-phone-number">
+                 ' . wp_kses_post($icon_momo) . '
               </div>';
         }
     }
@@ -287,8 +304,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 'redirect' => $returnUrl,
             ];
         } catch (Throwable $exception) {
-            $this->logger->error(__FILE__, __LINE__, $exception->getMessage());
-            wc_add_notice($exception->getMessage(), 'error');
+            $this->logger->error(__FILE__, __LINE__, esc_html($exception->getMessage()));
+            wc_add_notice(esc_html($exception->getMessage()), 'error');
 
             return [];
         }
@@ -299,7 +316,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $merchantReferenceId = sanitize_text_field(filter_input(INPUT_GET, 'trx'));
 
         if (empty($merchantReferenceId) || !wp_is_uuid(sanitize_text_field($merchantReferenceId))) {
-            $this->logger->error(__FILE__, __LINE__, 'Invalid trx parameter: ' . $merchantReferenceId);
+            $this->logger->error(__FILE__, __LINE__, 'Invalid trx parameter: ' .
+                esc_html($merchantReferenceId));
 
             return new WP_REST_Response([
                 'status' => 'KO',
@@ -320,12 +338,18 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         }
 
         $status = filter_input(INPUT_GET, 'status');
+        if ($status) {
+            $status = sanitize_text_field($status);
+        }
 
-        if (empty($status) || !in_array(
-            sanitize_text_field($status),
+        if (empty($status) || !in_array($status,
             array_map(fn ($status) => strtolower($status->value), Status::cases())
         )) {
-            $this->logger->error(__FILE__, __LINE__, 'onNotification:: Invalide status ' . $status);
+            $this->logger->error(
+                __FILE__,
+                __LINE__,
+                'onNotification:: Invalide status ' . esc_html($status)
+            );
 
             return new WP_REST_Response([
                 'status' => 'KO',
@@ -339,28 +363,44 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $this->logger->info(
             __FILE__,
             __LINE__,
-            'onNotification:: status ' . $status . ' updates successfully'
+            'onNotification:: status ' . esc_html($status) . ' updates successfully'
         );
 
         return new WP_REST_Response([
             'status' => 'OK',
-            'message' => sprintf('CamooPay Status Updated From %s To %s', $oldStatus, $order->get_status()),
+            'message' => sprintf(
+                'CamooPay Status Updated From %s To %s',
+                esc_html($oldStatus),
+                esc_html($order->get_status())
+            ),
         ], 200);
     }
 
     public function get_icon()
     {
-        // Define the icon image path
-        $icon_url = plugin_dir_url(__FILE__) . 'assets/images/camoo-pay.png';
 
-        $icon_html = '<img width="144" height="40" src="' . esc_url($icon_url) . '" alt="' .
-            esc_attr__('CamooPay for e-commerce acceptance mark', 'camoo-pay-for-ecommerce') . '"
-              style="max-width:80%; height:auto; 
-                     border: 3px solid #73d8fd00; border-radius: 10px;"
-             />';
+        $attachment_id = get_option(MediaEnum::CAMOO_PAY_ICON->value);
+        if ($attachment_id) {
 
-        // Apply filters for compatibility with WooCommerce
-        return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
+            $icon_html = wp_get_attachment_image(
+                sanitize_text_field($attachment_id),
+                [
+                    '444',
+                    '40',
+                ],
+                false,
+                [
+                    'class' => 'camoo-pay-icon-checkout',
+                    'alt' => esc_attr__('CamooPay for e-commerce acceptance mark', 'camoo-pay-for-ecommerce'),
+                ]
+            );
+
+            return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
+        }
+
+        $this->icon = plugin_dir_url(__FILE__) . 'assets/images/camoo-pay.png';
+
+        return parent::get_icon();
     }
 
     /**
@@ -396,7 +436,11 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         try {
             $payment = $paymentApi->cashout($orderData);
         } catch (Exception $exception) {
-            $this->logger->error(__FILE__, __LINE__, $exception->getMessage());
+            $this->logger->error(
+                __FILE__,
+                __LINE__,
+                esc_html($exception->getMessage())
+            );
 
             return null;
         }

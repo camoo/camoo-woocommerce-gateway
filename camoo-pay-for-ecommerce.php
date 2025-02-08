@@ -28,6 +28,20 @@ namespace Camoo\Pay\WooCommerce;
 
 defined('ABSPATH') || exit;
 
+if (version_compare(PHP_VERSION, '8.1', '<')) {
+    add_action('admin_notices', 'camoo_pay_php_version_notice');
+
+    return;
+}
+function camoo_pay_php_version_notice(): void
+{
+    $plugin_name = 'CamooPay for e-Commerce';
+    ?>
+    <div class="error">
+        <p><?php echo esc_html($plugin_name . ' requires PHP version 8.1 or higher. Please upgrade your PHP version.'); ?></p>
+    </div>
+    <?php
+}
 require_once __DIR__ . '/includes/Plugin.php';
 require_once __DIR__ . '/includes/admin/PluginAdmin.php';
 
