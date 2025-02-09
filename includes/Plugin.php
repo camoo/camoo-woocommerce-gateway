@@ -25,9 +25,11 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.1';
 
         public const WC_CAMOO_PAY_GATEWAY_ID = 'wc_camoo_pay';
+
+        private const DOMAIN_TEXT = 'camoo-pay-for-ecommerce';
 
         protected $id;
 
@@ -150,6 +152,7 @@ if (!class_exists(Plugin::class)) {
             $this->loadGatewayClass();
             add_action('rest_api_init', [$this, 'notification_route']);
             add_action('woocommerce_loaded', [new Media(), 'upload_image_to_media_library']);
+            $this->loadTextDomain();
         }
 
         public function notification_route(): void
@@ -212,6 +215,15 @@ if (!class_exists(Plugin::class)) {
 
             require_once __DIR__ . '/Logger/Logger.php';
             self::$logger = new Logger\Logger('camoo-pay-for-ecommerce', true);
+        }
+
+        public function loadTextDomain(): void
+        {
+            load_plugin_textdomain(
+                self::DOMAIN_TEXT,
+                false,
+                dirname(plugin_basename(__DIR__)) . '/includes/languages'
+            );
         }
 
         public static function get_webhook_url($endpoint): string
