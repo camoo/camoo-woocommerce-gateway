@@ -1,11 +1,9 @@
 === CamooPay for e-Commerce - Mobile Money Gateway ===
 Contributors: camoo
 Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
-Requires at least: 6.0
 Requires Plugins: woocommerce
-Tested up to: 6.7
-Requires PHP: 8.1
-Stable tag: 1.0
+Tested up to: 6.7.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,7 +33,6 @@ Yes! This plugin is fully compatible with WooCommerce's High Performance Order S
 = Features =
 * Pay with Cameroon MTN Mobile Money
 * Pay with Cameroon Orange Mobile Money
-* Pay with Express Union Mobile Money
 
 == Frequently Asked Questions ==
 
@@ -46,7 +43,7 @@ Yes! We have installation documentation.
 To test the plugin, create a CamooPay for the e-commerce sandbox account and configure the plugin.
 
 = How to get my access keys? =
-All you need is just to [create an account](https://camoo.cm/) and then ask our team for consumer key pairs.
+All you need is just to [create an account](https://www.camoo.cm/) and then ask our team for consumer key pairs.
 
 = Can I receive a cash payment? =
 Yes! You can receive CamooPay cash if your buyer has an account with CamooPay.
@@ -60,11 +57,11 @@ This plugin is a FREE download.
 2. Search for "CamooPay."
 3. Install the plugin by pressing the "Install" button.
 4. Activate the plugin by pressing the "Activate" button.
-5. Open the settings page for e-Commerce and click the "Payments" tab.
+5. Go to WooCommerce, click on settings and select the "Payments" tab.
 6. Click on the line for "CamooPay for e-commerce Payment."
 7. Configure your CamooPay for e-commerce Gateway settings.
 
-More details can be found on the [documentation website](https://camoo.cm)
+More details can be found on the [documentation website](https://www.camoo.cm)
 
 = Minimum Requirements =
 * WordPress version 6.0 or greater.
@@ -90,6 +87,11 @@ More details can be found on the [documentation website](https://camoo.cm)
 N/A
 
 == Changelog ==
+= 1.0.2: February 09, 2025 =
+* Fixed Uploading CamooPay media files
 
-= 1.0: January 26, 2025 =
+= 1.0.1: February 09, 2025 =
+* tweak: Ensure custom translations are loaded correctly
+
+= 1.0: January 09, 2025 =
 * Start plugin

@@ -1,0 +1,10 @@
+*** WooCommerce CamooPay Changelog ***
+
+2025-02-09 - version 1.0.2
+* Fixed Uploading CamooPay media files
+
+2025-02-09 - version 1.0.1
+* Fixed Ensure custom translations are loaded correctly
+
+2025-02-09 - version 1.0
+* Initial release
