@@ -25,7 +25,9 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.1';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.2';
+
+        public const DEFAULT_TITLE = 'CamooPay for e-commerce';
 
         public const WC_CAMOO_PAY_GATEWAY_ID = 'wc_camoo_pay';
 
@@ -80,6 +82,8 @@ if (!class_exists(Plugin::class)) {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
             require_once __DIR__ . '/Install.php';
             require_once __DIR__ . '/admin/Enum/MetaKeysEnum.php';
+            require_once __DIR__ . '/Logger/Logger.php';
+            require_once __DIR__ . '/Media.php';
             // do not register when WooCommerce is not enabled
             if (!is_plugin_active('woocommerce/woocommerce.php')) {
                 wp_admin_notice(
@@ -93,14 +97,13 @@ if (!class_exists(Plugin::class)) {
             }
             register_activation_hook($this->pluginPath, [Install::class, 'install']);
 
-            add_filter('woocommerce_payment_gateways', [$this, 'onAddGatewayClass']);
             add_filter(
                 'plugin_action_links_' . plugin_basename($this->pluginPath),
                 [$this, 'onPluginActionLinks'],
                 1,
                 1
             );
-            add_action('plugins_loaded', [$this, 'onInit']);
+            add_action('plugins_loaded', [$this, 'onInit'], 0);
             add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_block_camoo_pay_css_scripts']);
             register_deactivation_hook($this->pluginPath, [$this, 'route_status_plugin_deactivate']);
 
@@ -150,8 +153,9 @@ if (!class_exists(Plugin::class)) {
         public function onInit(): void
         {
             $this->loadGatewayClass();
+            self::$logger->initLogger();
             add_action('rest_api_init', [$this, 'notification_route']);
-            add_action('woocommerce_loaded', [new Media(), 'upload_image_to_media_library']);
+            add_filter('woocommerce_payment_gateways', [$this, 'onAddGatewayClass']);
             $this->loadTextDomain();
         }
 
@@ -210,11 +214,8 @@ if (!class_exists(Plugin::class)) {
 
             include_once dirname(__DIR__) . '/vendor/autoload.php';
             include_once dirname(__DIR__) . '/includes/admin/Enum/MediaEnum.php';
-            include_once dirname(__DIR__) . '/includes/Media.php';
             include_once dirname(__DIR__) . '/includes/Gateway.php';
-
-            require_once __DIR__ . '/Logger/Logger.php';
-            self::$logger = new Logger\Logger('camoo-pay-for-ecommerce', true);
+            self::$logger = new Logger\Logger(self::WC_CAMOO_PAY_GATEWAY_ID, WP_DEBUG);
         }
 
         public function loadTextDomain(): void

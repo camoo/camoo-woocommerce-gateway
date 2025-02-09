@@ -22,8 +22,6 @@ if (!class_exists(Logger::class)) {
             $this->id = $id;
             $this->logger = null;
             $this->enabled = $enabled;
-
-            add_action('plugins_loaded', [$this, 'initLogger'], 1);
         }
 
         public function initLogger(): void

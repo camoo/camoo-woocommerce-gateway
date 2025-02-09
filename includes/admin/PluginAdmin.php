@@ -10,6 +10,7 @@ namespace Camoo\Pay\WooCommerce\Admin;
 
 use Camoo\Pay\WooCommerce\Admin\Enum\MetaKeysEnum;
 use Camoo\Pay\WooCommerce\Logger\Logger;
+use Camoo\Pay\WooCommerce\Media;
 use Camoo\Pay\WooCommerce\Plugin;
 use Camoo\Payment\Api\PaymentApi;
 use Camoo\Payment\Http\Client;
@@ -68,6 +69,7 @@ if (!class_exists(PluginAdmin::class)) {
             add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_admin_camoo_pay_css_scripts']);
 
             add_action('woocommerce_admin_order_data_after_order_details', [__CLASS__, 'display_camoo_pay_fee_in_order_details'], 10, 1);
+            add_action('admin_init', [new Media(), 'upload_image_to_media_library']);
         }
 
         public static function display_camoo_pay_fee_in_order_details($order): void

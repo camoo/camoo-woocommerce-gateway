@@ -7,6 +7,8 @@ namespace Camoo\Pay\WooCommerce;
 use Camoo\Pay\WooCommerce\Admin\Enum\MediaEnum;
 use Camoo\Pay\WooCommerce\Logger\Logger;
 
+use function media_handle_sideload;
+
 final class Media
 {
     public function __construct(private ?Logger $logger = null)
@@ -33,6 +35,11 @@ final class Media
 
             // Skip if the image is already uploaded
             if ($installedAttachmentId) {
+                $this->logger->info(__FILE__, __LINE__, sprintf(
+                    "Image '%s' already uploaded with Attachment ID: %d",
+                    esc_html($media),
+                    esc_html($installedAttachmentId)
+                ));
                 continue;
             }
 
@@ -51,6 +58,12 @@ final class Media
     {
         // Full path to the image within the plugin directory
         $image_path = plugin_dir_path(__FILE__) . $file;
+
+        $this->logger->debug(__FILE__, __LINE__, sprintf(
+            "Uploading image '%s' from path: %s",
+            esc_html($file),
+            esc_html($image_path)
+        ));
 
         // Check if the image file exists
         if (!file_exists($image_path)) {

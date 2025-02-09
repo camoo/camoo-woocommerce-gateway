@@ -58,6 +58,14 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $this->logger = new Logger\Logger($this->id, WP_DEBUG || $this->testMode);
     }
 
+    public function get_title()
+    {
+        $gatewayName = empty($this->title) ? Plugin::DEFAULT_TITLE : $this->title;
+        $title = sanitize_text_field($gatewayName);
+
+        return apply_filters('woocommerce_gateway_title', $title, Plugin::WC_CAMOO_PAY_GATEWAY_ID);
+    }
+
     public function init_form_fields()
     {
         $wc_camoo_pay_settings = [
@@ -342,7 +350,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             $status = sanitize_text_field($status);
         }
 
-        if (empty($status) || !in_array($status,
+        if (empty($status) || !in_array(
+            $status,
             array_map(fn ($status) => strtolower($status->value), Status::cases())
         )) {
             $this->logger->error(
