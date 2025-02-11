@@ -88,7 +88,7 @@ N/A
 
 == Changelog ==
 
-= 1.0.3: February 10, 2025 =
+= 1.0.3: February 11, 2025 =
 * Added - Support for method title
 * Tweak - wc_camoo_pay debug log now ensures that WP_DEBUG_LOG is enabled
 

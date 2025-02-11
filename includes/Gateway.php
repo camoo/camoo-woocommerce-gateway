@@ -45,7 +45,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
         $this->title = esc_html($this->get_option('title'));
         $this->description = esc_html($this->get_option('description'));
-        $this->method_title = esc_html($this->get_option('method_title'));
+        $this->method_title = esc_html($this->get_option('method_title') ?: Plugin::DEFAULT_TITLE);
         $this->method_description = esc_html($this->get_option('description'));
         $this->enabled = sanitize_text_field($this->get_option('enabled'));
         $this->testMode = 'yes' === sanitize_text_field($this->get_option('test_mode'));
@@ -56,14 +56,6 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $this->registerHooks();
 
         $this->logger = new Logger\Logger($this->id, WP_DEBUG || $this->testMode);
-    }
-
-    public function get_method_title()
-    {
-        $gatewayName = empty($this->method_title) ? Plugin::DEFAULT_TITLE : $this->method_title;
-        $title = sanitize_text_field($gatewayName);
-
-        return apply_filters('woocommerce_gateway_method_title', $title, Plugin::WC_CAMOO_PAY_GATEWAY_ID);
     }
 
     public function init_form_fields()
@@ -80,7 +72,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 'title' => esc_html__('Title', 'camoo-pay-for-ecommerce'),
                 'type' => 'text',
                 'description' => esc_html__('This controls the title which the user sees during checkout.', 'camoo-pay-for-ecommerce'),
-                'default' => esc_html__('CamooPay for e-commerce Payment.', 'camoo-pay-for-ecommerce'),
+                'default' => esc_html__('Mobile Money Payment Gateway', 'camoo-pay-for-ecommerce'),
                 'desc_tip' => true,
             ],
             'description' => [
@@ -120,7 +112,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                         'Enter your CamooPay for e-commerce API credentials to process Payments via CamooPay for e-commerce. Learn how to access your ',
                         'camoo-pay-for-ecommerce'
                     ) .
-                    '<a href="' . esc_url('https://camoo.cm/faq/') . '" target="_blank" rel="noopener noreferrer">' .
+                    '<a href="' . esc_url('https://www.camoo.cm/faq/') . '" target="_blank" rel="noopener noreferrer">' .
                     esc_attr__('CamooPay for e-commerce API Credentials', 'camoo-pay-for-ecommerce') . '</a>',
                     [
                         'a' => [
