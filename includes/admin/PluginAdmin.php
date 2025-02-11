@@ -77,11 +77,14 @@ if (!class_exists(PluginAdmin::class)) {
             $camooPayFee = $order->get_meta(MetaKeysEnum::PAYMENT_FEE->value, true);
 
             if (null !== $camooPayFee) {
-                echo '<div class="order_data_column">';
-                echo '<p><strong>' . esc_attr__('CamooPay Fee', 'camoo-pay-for-ecommerce') . ':</strong> ' .
+
+                echo '<p class="form-field form-field-wide">
+                    <label for="wc_camoo_pay_fee">
+                        <strong for="wc_camoo_pay_fee">' .
+                            esc_attr__('CamooPay Fee', 'camoo-pay-for-ecommerce') . ':
+                        </strong> ' .
                     esc_attr(self::camoo_pay_fee_format((float)$camooPayFee)) .
-                    '</p>';
-                echo '</div>';
+                    '</label></p>';
 
             }
         }
