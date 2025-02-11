@@ -3,7 +3,7 @@ Contributors: camoo
 Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
 Requires Plugins: woocommerce
 Tested up to: 6.7.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,6 +87,11 @@ More details can be found on the [documentation website](https://www.camoo.cm)
 N/A
 
 == Changelog ==
+
+= 1.0.3: February 11, 2025 =
+* Added - Support for method title
+* Tweak - wc_camoo_pay debug log now ensures that WP_DEBUG_LOG is enabled
+
 = 1.0.2: February 09, 2025 =
 * Fixed Uploading CamooPay media files
 

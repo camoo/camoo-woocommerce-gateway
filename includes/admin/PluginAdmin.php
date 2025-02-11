@@ -77,11 +77,14 @@ if (!class_exists(PluginAdmin::class)) {
             $camooPayFee = $order->get_meta(MetaKeysEnum::PAYMENT_FEE->value, true);
 
             if (null !== $camooPayFee) {
-                echo '<div class="order_data_column">';
-                echo '<p><strong>' . esc_attr__('CamooPay Fee', 'camoo-pay-for-ecommerce') . ':</strong> ' .
+
+                echo '<p class="form-field form-field-wide">
+                    <label for="wc_camoo_pay_fee">
+                        <strong for="wc_camoo_pay_fee">' .
+                            esc_attr__('CamooPay Fee', 'camoo-pay-for-ecommerce') . ':
+                        </strong> ' .
                     esc_attr(self::camoo_pay_fee_format((float)$camooPayFee)) .
-                    '</p>';
-                echo '</div>';
+                    '</label></p>';
 
             }
         }
@@ -105,7 +108,7 @@ if (!class_exists(PluginAdmin::class)) {
                     $client = Client::create($consumerKey, $consumerSecret);
 
                     $paymentApi = new PaymentApi($client);
-                    $ptn = $order->get_meta(MetaKeysEnum::CAMOO_PAYMENT_TRANSACTION_ID->value, true);
+                    $ptn = $order->get_meta(MetaKeysEnum::CAMOO_PAYMENT_TRANSACTION_ID->value);
 
                     if ($ptn) {
 
@@ -117,7 +120,7 @@ if (!class_exists(PluginAdmin::class)) {
                         }
 
                         if (null !== $verify) {
-                            $merchantTransactionId = $order->get_meta(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value, true);
+                            $merchantTransactionId = $order->get_meta(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value);
                             Plugin::processWebhookStatus(
                                 $order,
                                 $verify->status,
@@ -243,8 +246,6 @@ if (!class_exists(PluginAdmin::class)) {
 
         private static function camoo_pay_fee_format(float $amount): string
         {
-            # maybe replicate wc_price ?
-            # wp-content/plugins/woocommerce/includes/wc-formatting-functions.php
             return sprintf(
                 '%s %s',
                 number_format($amount, 0, ',', ' '),

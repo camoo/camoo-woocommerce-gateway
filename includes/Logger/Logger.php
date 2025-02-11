@@ -16,12 +16,14 @@ if (!class_exists(Logger::class)) {
         private bool $enabled;
 
         private ?WC_Logger $logger;
+        private bool $withDebugLog;
 
         public function __construct($id, $enabled = false)
         {
             $this->id = $id;
             $this->logger = null;
             $this->enabled = $enabled;
+            $this->withDebugLog = WP_DEBUG_LOG;
         }
 
         public function initLogger(): void
@@ -48,6 +50,9 @@ if (!class_exists(Logger::class)) {
 
         public function debug($file, $line, $message): void
         {
+            if (!$this->withDebugLog) {
+                return;
+            }
             $this->log('debug', $file, $line, $message);
         }
 

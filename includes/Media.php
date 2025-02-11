@@ -35,7 +35,7 @@ final class Media
 
             // Skip if the image is already uploaded
             if ($installedAttachmentId) {
-                $this->logger->info(__FILE__, __LINE__, sprintf(
+                $this->logger->debug(__FILE__, __LINE__, sprintf(
                     "Image '%s' already uploaded with Attachment ID: %d",
                     esc_html($media),
                     esc_html($installedAttachmentId)
