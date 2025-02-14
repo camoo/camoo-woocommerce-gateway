@@ -1,5 +1,8 @@
 *** WooCommerce CamooPay Changelog ***
 
+2025-02-14 - version 1.0.4
+* Fixed - avoid overwriting mobile money number icon CSS styles
+
 2025-02-11 - version 1.0.3
 * Added - Support for method title
 * Tweak - wc_camoo_pay debug log now ensures that WP_DEBUG_LOG is enabled
