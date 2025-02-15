@@ -30,7 +30,7 @@ div.camoo-pay-mobile-money-phone-number {
 }
 .camoo-pay-mobile-money-phone-number img {
     max-width:80%;
-    height:auto; border: 3px solid #50575e; border-radius: 15px; padding:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    height: auto !important; border: 3px solid #50575e; border-radius: 15px; padding:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .camoo-pay-phone-input {
     width: 100%; padding: 10px;

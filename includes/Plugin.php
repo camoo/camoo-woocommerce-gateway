@@ -25,7 +25,7 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.3';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.4';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
