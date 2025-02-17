@@ -80,13 +80,26 @@ if (!class_exists(PluginAdmin::class)) {
 
                 echo '<p class="form-field form-field-wide">
                     <label for="wc_camoo_pay_fee">
-                        <strong for="wc_camoo_pay_fee">' .
+                        <strong>' .
                             esc_attr__('CamooPay Fee', 'camoo-pay-for-ecommerce') . ':
                         </strong> ' .
                     esc_attr(self::camoo_pay_fee_format((float)$camooPayFee)) .
                     '</label></p>';
 
             }
+
+            $mobileMoneyNumber = $order->get_meta(MetaKeysEnum::BUYER_MOBILE_MONEY_NUMBER->value, true);
+            if (null !== $mobileMoneyNumber) {
+
+                echo '<p class="form-field form-field-wide">
+                    <label for="wc_camoo_pay_mobile_money_number">
+                        <strong>' .
+                    esc_attr__('Buyer Mobile money number', 'camoo-pay-for-ecommerce') . ':
+                        </strong> ' .
+                    esc_html($mobileMoneyNumber) .
+                    '</label></p>';
+            }
+
         }
 
         public static function verifyCamooPayStatus(): void

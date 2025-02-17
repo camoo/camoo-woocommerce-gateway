@@ -285,6 +285,10 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
             $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value, sanitize_text_field($merchantReferenceId));
             $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_ORDER_STATUS->value, sanitize_text_field($status->value));
+            $wcOrder->update_meta_data(
+                MetaKeysEnum::BUYER_MOBILE_MONEY_NUMBER->value,
+                sanitize_text_field(Plugin::anonymizePhoneNumber($orderData['phone_number']))
+            );
 
             // Add the notice if the payment is successful
             if ($payment !== null) {
@@ -450,7 +454,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     }
 
     /**
-     * Normalize the amount for XAF (FCFA BEAC) to ensure it's a valid multiple of 25,
+     * Normalize the amount for XAF (FCFA BEAC) to ensure it's a valid multiple of 5,
      * but only adjust amounts that are not already divisible by 5.
      *
      * @param float $amount The amount to be normalized.
@@ -461,20 +465,12 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         // Check if the amount is divisible by 5
         if ($amount % 5 !== 0) {
-            // Round the amount to the nearest multiple of 25
-            return round($amount / 25) * 25;
+            // Round the amount to the nearest multiple of 5
+            return round($amount / 5) * 5;
         }
 
         // Return the amount as is if it's already divisible by 5
         return $amount;
-    }
-
-    private function cleanUpPhone(string $rawData): string
-    {
-        /** @var string $phone */
-        $phone = wc_clean(wp_unslash($rawData));
-
-        return preg_replace('/\D/', '', $phone);
     }
 
     /** @return array<string, mixed> */
@@ -482,7 +478,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         $order_data = $wcOrder->get_data();
         $post_data = $this->get_post_data();
-        $phoneNumber = $this->cleanUpPhone($post_data['camoo_pay_phone_number']);
+        $phoneNumber = Plugin::cleanUpPhone($post_data['camoo_pay_phone_number']);
         $orderData = [
             'external_reference' => $merchantReferenceId,
             'phone_number' => $phoneNumber,

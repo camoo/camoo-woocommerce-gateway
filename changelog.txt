@@ -1,5 +1,10 @@
 *** WooCommerce CamooPay Changelog ***
 
+2025-02-17 - version 1.0.5
+* Tweak - Missing translations added
+* Added - Display the mobile money number on the order received page
+* Fixed - Ensure FCFA amount is adjusted correctly. It's a valid multiple of 5
+
 2025-02-14 - version 1.0.4
 * Fixed - avoid overwriting mobile money number icon CSS styles
 

@@ -25,11 +25,13 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.4';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.5';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
         public const WC_CAMOO_PAY_GATEWAY_ID = 'wc_camoo_pay';
+
+        private const DEFAULT_COUNTRY_CODE = '237';
 
         private const DOMAIN_TEXT = 'camoo-pay-for-ecommerce';
 
@@ -319,6 +321,24 @@ if (!class_exists(Plugin::class)) {
                 Status::FAILED, Status::ERRORED => self::processWebhookFailed($order, $merchantReferenceId),
             };
 
+        }
+
+        public static function cleanUpPhone(string $number): string
+        {
+            /** @var string $phone */
+            $phone = wc_clean(wp_unslash($number));
+
+            return preg_replace('/\D/', '', $phone);
+        }
+
+        public static function anonymizePhoneNumber(string $number, ?string $phoneCountryCode = null): string
+        {
+            $phoneCountryCode = $phoneCountryCode ?: self::DEFAULT_COUNTRY_CODE;
+            $cleanedNumber = self::cleanUpPhone($number);
+            $pattern = '/^(\+' . $phoneCountryCode . '|' . $phoneCountryCode . '|00' . $phoneCountryCode . ')?/';
+            $number = preg_replace($pattern, '', $cleanedNumber);
+
+            return substr($number, 0, 1) . str_repeat('*', strlen($number) - 3) . substr($number, -2);
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
