@@ -12,4 +12,5 @@ enum MetaKeysEnum: string
     case PAYMENT_NOTIFIED_AT = '_camoo_pay_merchant_notified_at';
     case PAYMENT_MERCHANT_TRANSACTION_ID = '_camoo_pay_merchant_transaction_id';
     case PAYMENT_BUYER_IP = '_camoo_pay_buyer_ip';
+    case BUYER_MOBILE_MONEY_NUMBER = '_camoo_pay_buyer_phone';
 }

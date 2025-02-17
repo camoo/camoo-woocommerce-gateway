@@ -5,7 +5,7 @@
  * Requires Plugins: woocommerce
  * Plugin URI: https://github.com/camoo/camoo-woocommerce-gateway
  * Description: Receive Mobile Money payments on your store using CamooPay for WooCommerce.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Tested up to: 6.7.2
  * Author: Camoo Sarl
  * Author URI: https://profiles.wordpress.org/camoo/
@@ -18,7 +18,7 @@
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  *
  * WC requires at least: 8.0
- * WC tested up to: 9.6.1
+ * WC tested up to: 9.6.2
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
