@@ -286,6 +286,10 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value, sanitize_text_field($merchantReferenceId));
             $wcOrder->update_meta_data(MetaKeysEnum::PAYMENT_ORDER_STATUS->value, sanitize_text_field($status->value));
             $wcOrder->update_meta_data(
+                MetaKeysEnum::PAYMENT_BUYER_IP->value,
+                sanitize_text_field(WC_Geolocation::get_ip_address())
+            );
+            $wcOrder->update_meta_data(
                 MetaKeysEnum::BUYER_MOBILE_MONEY_NUMBER->value,
                 sanitize_text_field(Plugin::anonymizePhoneNumber($orderData['phone_number']))
             );
@@ -490,6 +494,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                     'ip' => WC_Geolocation::get_ip_address(),
                     'user_agent' => wc_get_user_agent(),
                     'php_version' => PHP_VERSION,
+                    'wc_camoo_pay_version' => Plugin::WC_CAMOO_PAY_DB_VERSION,
+                    'wp_version' => get_bloginfo('version'),
                 ],
                 'email' => $order_data['billing']['email'],
                 'customerName' => $order_data['billing']['first_name'] . ' ' . $order_data['billing']['last_name'],
