@@ -1,5 +1,9 @@
 *** WooCommerce CamooPay Changelog ***
 
+2025-02-21 - version 1.0.6
+* Fixed - General update to the plugin
+* Fixed - Ensure metadata is saved correctly
+
 2025-02-17 - version 1.0.5
 * Tweak - Missing translations added
 * Added - Display the mobile money number on the order received page

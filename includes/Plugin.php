@@ -25,7 +25,7 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.5';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.6';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
@@ -304,7 +304,7 @@ if (!class_exists(Plugin::class)) {
         }
 
         public static function processWebhookStatus(
-            $order,
+            mixed $order,
             string $status,
             string $merchantReferenceId,
             ?Payment $payment = null
@@ -342,8 +342,11 @@ if (!class_exists(Plugin::class)) {
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
-        private static function processWebhookConfirmed($order, string $merchantReferenceId, ?Payment $payment = null): void
-        {
+        private static function processWebhookConfirmed(
+            mixed $order,
+            string $merchantReferenceId,
+            ?Payment $payment = null
+        ): void {
             $order->update_status('completed');
             wc_reduce_stock_levels($order->get_id());
 
@@ -351,62 +354,68 @@ if (!class_exists(Plugin::class)) {
             $consumerSecret = sanitize_text_field(get_option('camoo_pay_secret') ?? '');
             $client = Client::create($consumerKey, $consumerSecret);
             $paymentApi = new PaymentApi($client);
-            $paymentHistory = self::getPaymentHistoryByReferenceId($merchantReferenceId);
 
-            $ptn = $paymentHistory->order_transaction_id;
+            $ptn = $order->get_meta(MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value);
 
             try {
                 $verifyPayment = $payment ?? $paymentApi->verify($ptn);
             } catch (Throwable) {
-                $order->add_order_note(__('CamooPay payment cannot be confirmed', 'camoo-pay-for-ecommerce'), true);
-
-                return;
+                $order->add_order_note(
+                    __('CamooPay payment cannot be confirmed', 'camoo-pay-for-ecommerce'),
+                    true
+                );
             }
 
             $fees = $verifyPayment?->fees ?? null;
-            self::applyStatusChange(Status::CONFIRMED, $merchantReferenceId, $fees);
             $order->add_order_note(__('CamooPay payment completed', 'camoo-pay-for-ecommerce'), true);
+            self::applyStatusChange(Status::CONFIRMED, $order, $merchantReferenceId, $fees);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'completed');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
-        private static function processWebhookProgress($order, string $merchantReferenceId, Status $realStatus): void
-        {
+        private static function processWebhookProgress(
+            mixed $order,
+            string $merchantReferenceId,
+            Status $realStatus
+        ): void {
             $currentStatus = $order->get_status();
             if ($currentStatus === 'completed') {
                 return;
             }
             $order->update_status('pending');
-            self::applyStatusChange($realStatus, $merchantReferenceId);
+            self::applyStatusChange($realStatus, $order, $merchantReferenceId);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'pending');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
-        private static function processWebhookCanceled($order, string $merchantReferenceId): void
+        private static function processWebhookCanceled(mixed $order, string $merchantReferenceId): void
         {
             $order->update_status('cancelled');
-            self::applyStatusChange(Status::CANCELED, $merchantReferenceId);
             $order->add_order_note(__('CamooPay payment cancelled', 'camoo-pay-for-ecommerce'), true);
+            self::applyStatusChange(Status::CANCELED, $order, $merchantReferenceId);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'cancelled');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
-        private static function processWebhookFailed($order, string $merchantReferenceId): void
+        private static function processWebhookFailed(mixed $order, string $merchantReferenceId): void
         {
             $order->update_status('failed');
-            self::applyStatusChange(Status::FAILED, $merchantReferenceId);
             $order->add_order_note(__('CamooPay payment failed', 'camoo-pay-for-ecommerce'), true);
+            self::applyStatusChange(Status::FAILED, $order, $merchantReferenceId);
             do_action('woocommerce_order_edit_status', $order->get_id(), 'failed');
         }
 
-        private static function applyStatusChange(Status $status, string $referenceId, ?float $fees = null): void
-        {
+        private static function applyStatusChange(
+            Status $status,
+            mixed $order,
+            ?string $merchantReferenceId = null,
+            ?float $fees = null,
+        ): void {
 
             /** @var bool|WC_Order|WC_Order_Refund $order */
-            $order = Plugin::getPaymentHistoryByReferenceId($referenceId);
             if (empty($order)) {
                 self::$logger?->debug(__FILE__, __LINE__, 'No order found for merchant reference ID: ' .
-                    esc_html($referenceId));
+                    esc_html($merchantReferenceId ?? ''));
 
                 return;
             }
@@ -419,7 +428,7 @@ if (!class_exists(Plugin::class)) {
                 $order->update_meta_data(MetaKeysEnum::PAYMENT_FEE->value, $fees);
             }
             if ($remoteIp) {
-                $order->update_meta_data(MetaKeysEnum::PAYMENT_BUYER_IP->value, sanitize_text_field($remoteIp));
+                $order->update_meta_data(MetaKeysEnum::PAYMENT_CONFIRM_ADR->value, sanitize_text_field($remoteIp));
             }
             $order->save();
 
