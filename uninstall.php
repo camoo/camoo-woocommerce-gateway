@@ -16,15 +16,15 @@ declare(strict_types=1);
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
 // Delete plugin options
-remove_camoo_pay_plugin_options();
-delete_camoo_pay_media_by_attachments();
+camoo_pay_remove_plugin_options();
+camoo_pay_delete_media_by_attachments();
 // Remove the gateway from the WooCommerce payment gateways list
-add_filter('woocommerce_payment_gateways', 'remove_camoo_pay_gateway');
+add_filter('woocommerce_payment_gateways', 'camoo_pay_remove_gateway');
 
 /**
  * Delete plugin-related options from WordPress.
  */
-function remove_camoo_pay_plugin_options(): void
+function camoo_pay_remove_plugin_options(): void
 {
     global $wpdb;
 
@@ -41,7 +41,7 @@ function remove_camoo_pay_plugin_options(): void
  *
  * @return string[]
  */
-function remove_camoo_pay_gateway(?array $gateways): array
+function camoo_pay_remove_gateway(?array $gateways): array
 {
     if (empty($gateways)) {
         return [];
@@ -55,7 +55,7 @@ function remove_camoo_pay_gateway(?array $gateways): array
     return $gateways;
 }
 
-function delete_camoo_pay_media_by_attachments(): void
+function camoo_pay_delete_media_by_attachments(): void
 {
     $media_options = [
         'wc_camoo_pay_db_online_momo_image',
