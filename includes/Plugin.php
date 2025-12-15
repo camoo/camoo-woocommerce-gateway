@@ -25,7 +25,7 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.6';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.7';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
@@ -76,7 +76,7 @@ if (!class_exists(Plugin::class)) {
             ];
 
             $this->mainMenuId = 'admin.php';
-            $this->title = __('CamooPay for e-commerce - Payment Gateway for WooCommerce', 'camoo-pay-for-ecommerce');
+            $this->title = 'CamooPay for e-commerce - Payment Gateway for WooCommerce';
         }
 
         public function register(): void
@@ -85,30 +85,32 @@ if (!class_exists(Plugin::class)) {
             require_once __DIR__ . '/Install.php';
             require_once __DIR__ . '/admin/Enum/MetaKeysEnum.php';
             require_once __DIR__ . '/Logger/Logger.php';
+            require_once __DIR__ . '/admin/Enum/MediaEnum.php';
             require_once __DIR__ . '/Media.php';
-            // do not register when WooCommerce is not enabled
+
+
             if (!is_plugin_active('woocommerce/woocommerce.php')) {
-                wp_admin_notice(
-                    __(
-                        'WooCommerce is not enabled. Please enable WooCommerce to use CamooPay for WooCommerce.',
-                        'camoo-pay-for-ecommerce'
-                    )
-                );
+
+                add_action('admin_notices', function () {
+                    echo '<div class="notice notice-error"><p>'
+                        . esc_html__('WooCommerce is not enabled. Please enable WooCommerce to use CamooPay for WooCommerce.', 'camoo-pay-for-ecommerce')
+                        . '</p></div>';
+                });
 
                 return;
             }
+
+
             register_activation_hook($this->pluginPath, [Install::class, 'install']);
+
 
             add_filter(
                 'plugin_action_links_' . plugin_basename($this->pluginPath),
-                [$this, 'onPluginActionLinks'],
-                1,
-                1
+                [$this, 'onPluginActionLinks'], 1, 1
             );
-            add_action('plugins_loaded', [$this, 'onInit'], 0);
+
             add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_block_camoo_pay_css_scripts']);
             register_deactivation_hook($this->pluginPath, [$this, 'route_status_plugin_deactivate']);
-
             add_action('before_woocommerce_init', [__CLASS__, 'camoo_pay_hpos_compatibility']);
 
             if (is_admin()) {
@@ -156,9 +158,19 @@ if (!class_exists(Plugin::class)) {
         {
             $this->loadGatewayClass();
             self::$logger->initLogger();
+
+            $this->title = __('CamooPay for e-commerce - Payment Gateway for WooCommerce', 'camoo-pay-for-ecommerce');
+            $this->description = sprintf(
+                '%s<br/><a href="%s" target="_blank">%s</a><br/><a href="%s" target="_blank">%s</a>',
+                __('CamooPay for e-commerce payment gateway', 'camoo-pay-for-ecommerce'),
+                'https://www.camoo.cm/#camoo-pay',
+                __('Do you have any questions or requests?', 'camoo-pay-for-ecommerce'),
+                'https://github.com/camoo/camoo-pay-for-ecommerce',
+                __('Do you like our plugin and can recommend to others.', 'camoo-pay-for-ecommerce')
+            );
+
             add_action('rest_api_init', [$this, 'notification_route']);
             add_filter('woocommerce_payment_gateways', [$this, 'onAddGatewayClass']);
-            $this->loadTextDomain();
         }
 
         public function notification_route(): void
@@ -215,18 +227,9 @@ if (!class_exists(Plugin::class)) {
             }
 
             include_once dirname(__DIR__) . '/vendor/autoload.php';
-            include_once dirname(__DIR__) . '/includes/admin/Enum/MediaEnum.php';
+
             include_once dirname(__DIR__) . '/includes/Gateway.php';
             self::$logger = new Logger\Logger(self::WC_CAMOO_PAY_GATEWAY_ID, WP_DEBUG);
-        }
-
-        public function loadTextDomain(): void
-        {
-            load_plugin_textdomain(
-                self::DOMAIN_TEXT,
-                false,
-                dirname(plugin_basename(__DIR__)) . '/includes/languages'
-            );
         }
 
         public static function get_webhook_url($endpoint): string
@@ -309,9 +312,10 @@ if (!class_exists(Plugin::class)) {
             string $merchantReferenceId,
             ?Payment $payment = null
         ): void {
+
             $enumStatus = Status::from(strtoupper($status));
             match ($enumStatus) {
-                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED, Status::PENDING => self::processWebhookProgress(
+                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED, Status::PENDING, Status::UNDERINVESTIGATION => self::processWebhookProgress(
                     $order,
                     $merchantReferenceId,
                     $enumStatus
