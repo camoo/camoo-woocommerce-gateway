@@ -40,8 +40,8 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         $this->has_fields = true;
         $this->id = Plugin::WC_CAMOO_PAY_GATEWAY_ID;
 
-        $this->init_settings();
         $this->init_form_fields();
+        $this->init_settings();
 
         $this->title = esc_html($this->get_option('title'));
         $this->description = esc_html($this->get_option('description'));
@@ -277,6 +277,7 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
             $orderData['shopping_cart_details'] = wp_json_encode($orderData['shopping_cart_details']);
             $payment = $this->placeOrder($orderData);
+
             $this->handleOrderResponse($wcOrder, $payment);
 
             $status = Status::tryFrom(strtoupper($payment->status));
@@ -305,12 +306,23 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
             $wcOrder->save();
 
             // Return to site
-            $returnUrl = get_permalink(wc_get_page_id('shop')) . '?trx=' . $merchantReferenceId . '&status=' . strtolower($status->value);
-
-            return [
+            $returnData = [
                 'result' => $payment === null ? 'failure' : 'success',
-                'redirect' => $returnUrl,
+                'redirect' => $this->get_return_url($wcOrder),
             ];
+            if ($returnData['result'] === 'failure') {
+                $returnData['redirect'] = esc_url_raw(
+                    add_query_arg(
+                        [
+                            'trx' => $merchantReferenceId,
+                            'status' => strtolower($status->value),
+                        ],
+                        get_permalink(wc_get_page_id('shop'))
+                    )
+                );
+            }
+
+            return $returnData;
         } catch (Throwable $exception) {
             $this->logger->error(__FILE__, __LINE__, esc_html($exception->getMessage()));
             wc_add_notice(esc_html($exception->getMessage()), 'error');
@@ -387,7 +399,6 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
 
     public function get_icon()
     {
-
         $attachment_id = get_option(MediaEnum::CAMOO_PAY_ICON->value);
         if ($attachment_id) {
 
@@ -404,7 +415,9 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
                 ]
             );
 
+            // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
             return apply_filters('woocommerce_gateway_icon', $icon_html, $this->id);
+
         }
 
         $this->icon = plugin_dir_url(__FILE__) . 'assets/images/camoo-pay.png';
@@ -420,9 +433,33 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         return false;
     }
 
+    public function render_thankyou_notice(int $order_id): void
+    {
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        // Show only while waiting for Mobile Money confirmation
+        if (in_array($order->get_status(), ['pending', 'on-hold'], true)) {
+            echo '<p class="woocommerce-info">';
+            echo esc_html__(
+                'Please confirm the payment on your phone to complete the order.',
+                'camoo-pay-for-ecommerce'
+            );
+            echo '</p>';
+        }
+    }
+
     private function registerHooks(): void
     {
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
+
+        // Thank-you page message (Mobile Money confirmation)
+        add_action(
+            'woocommerce_thankyou_' . $this->id,
+            [$this, 'render_thankyou_notice']
+        );
 
         // ADD refund hook
     }

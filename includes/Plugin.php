@@ -8,6 +8,7 @@
 
 namespace Camoo\Pay\WooCommerce;
 
+use Automattic\WooCommerce\StoreApi\Schemas\V1\CheckoutSchema;
 use Automattic\WooCommerce\Utilities\FeaturesUtil;
 use Camoo\Pay\WooCommerce\Admin\Enum\MetaKeysEnum;
 use Camoo\Pay\WooCommerce\Admin\PluginAdmin;
@@ -20,20 +21,19 @@ use WC_Geolocation;
 use WC_Order;
 use WC_Order_Query;
 use WC_Order_Refund;
+use WP_REST_Request;
 
 defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.7';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.8';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
         public const WC_CAMOO_PAY_GATEWAY_ID = 'wc_camoo_pay';
 
         private const DEFAULT_COUNTRY_CODE = '237';
-
-        private const DOMAIN_TEXT = 'camoo-pay-for-ecommerce';
 
         protected $id;
 
@@ -88,7 +88,6 @@ if (!class_exists(Plugin::class)) {
             require_once __DIR__ . '/admin/Enum/MediaEnum.php';
             require_once __DIR__ . '/Media.php';
 
-
             if (!is_plugin_active('woocommerce/woocommerce.php')) {
 
                 add_action('admin_notices', function () {
@@ -100,22 +99,68 @@ if (!class_exists(Plugin::class)) {
                 return;
             }
 
-
             register_activation_hook($this->pluginPath, [Install::class, 'install']);
-
 
             add_filter(
                 'plugin_action_links_' . plugin_basename($this->pluginPath),
-                [$this, 'onPluginActionLinks'], 1, 1
+                [$this, 'onPluginActionLinks'],
+                1,
+                1
             );
 
             add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_block_camoo_pay_css_scripts']);
             register_deactivation_hook($this->pluginPath, [$this, 'route_status_plugin_deactivate']);
             add_action('before_woocommerce_init', [__CLASS__, 'camoo_pay_hpos_compatibility']);
+            add_action('woocommerce_blocks_loaded', [$this, 'register_store_api_extensions']);
+            add_action(
+                'woocommerce_store_api_checkout_update_order_from_request',
+                [$this, 'manage_api_order_from_request'],
+                10,
+                2
+            );
 
             if (is_admin()) {
                 PluginAdmin::instance()->register();
             }
+        }
+
+        public function manage_api_order_from_request(WC_Order $order, WP_REST_Request $request): void
+        {
+            $payment_data = $request->get_param('payment_data') ?? [];
+
+            foreach ($payment_data as $item) {
+                if (
+                    isset($item['key'], $item['value']) &&
+                    $item['key'] === 'camoo_pay_phone_number'
+                ) {
+                    $order->update_meta_data(
+                        MetaKeysEnum::BUYER_MOBILE_MONEY_NUMBER->value,
+                        sanitize_text_field($item['value'])
+                    );
+                }
+            }
+        }
+
+        public function register_store_api_extensions(): void
+        {
+            if (!function_exists('woocommerce_store_api_register_endpoint_data')) {
+                return;
+            }
+
+            woocommerce_store_api_register_endpoint_data(
+                [
+                    'endpoint' => CheckoutSchema::IDENTIFIER,
+                    'namespace' => 'camoo_pay',
+                    'schema_callback' => static fn (): array => [
+                        'phone_number' => [
+                            'description' => __('Mobile Money phone number', 'camoo-pay-for-ecommerce'),
+                            'type' => 'string',
+                            'required' => true,
+                        ],
+                    ],
+
+                ]
+            );
         }
 
         public static function camoo_pay_hpos_compatibility(): void
@@ -143,8 +188,26 @@ if (!class_exists(Plugin::class)) {
                 'camoo_pay_style',
                 plugins_url('/assets/css/style.css', __FILE__),
                 [],
-                Plugin::WC_CAMOO_PAY_DB_VERSION
+                self::WC_CAMOO_PAY_DB_VERSION
             );
+
+            if (
+                !function_exists('is_checkout') ||
+                !is_checkout() ||
+                !function_exists('WC')
+            ) {
+                return;
+            }
+
+            wp_register_script(
+                'camoo-pay-blocks',
+                plugins_url('/assets/js/index.js', __FILE__),
+                ['wc-blocks-registry', 'wp-element', 'wp-i18n'],
+                self::WC_CAMOO_PAY_DB_VERSION,
+                true
+            );
+
+            wp_enqueue_script('camoo-pay-blocks');
         }
 
         public function onAddGatewayClass($gateways)
@@ -168,6 +231,33 @@ if (!class_exists(Plugin::class)) {
                 'https://github.com/camoo/camoo-pay-for-ecommerce',
                 __('Do you like our plugin and can recommend to others.', 'camoo-pay-for-ecommerce')
             );
+
+            /**
+             * The hook camoo_pay_order_status_changed can be used during order status change.
+             *
+             * Example usage:
+             *
+             *     // The action callback function.
+             *     Function example_on_change_status_callback( $order, $status) {
+             *         // (maybe) do something for the $order and $status info depending on your logic.
+             *     }
+             *
+             *     add_action('camoo_pay_order_status_changed', 'example_on_change_status_callback', 10, 2 );
+             *
+             *     /*
+             *      * Trigger the actions by calling the 'example_on_change_status_callback()' function
+             *      * that's hooked onto `camoo_pay_order_status_changed`.
+             *
+             *      * @param WC_Order $order The WooCommerce order object.
+             *      * @param Status $status The new status of the order.
+             *      * @param string|null $merchantReferenceId The merchant reference ID associated with the order (if available).
+             *      * @param Payment|null $payment The payment object associated with the order (if available).
+             *
+             *      * @return void
+             *
+             * @since 1.0.8
+             */
+            add_action('camoo_pay_order_status_changed', [$this, 'onCamooPayStatusChanged'], 10, 4);
 
             add_action('rest_api_init', [$this, 'notification_route']);
             add_filter('woocommerce_payment_gateways', [$this, 'onAddGatewayClass']);
@@ -313,16 +403,39 @@ if (!class_exists(Plugin::class)) {
             ?Payment $payment = null
         ): void {
 
+            $current = $order->get_meta(MetaKeysEnum::PAYMENT_ORDER_STATUS->value);
+
+            if ($current === sanitize_title($status)) {
+                return;
+            }
+
             $enumStatus = Status::from(strtoupper($status));
             match ($enumStatus) {
-                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED, Status::PENDING, Status::UNDERINVESTIGATION => self::processWebhookProgress(
+                Status::IN_PROGRESS, Status::CREATED, Status::INITIALISED, Status::PENDING, Status::UNDERINVESTIGATION => do_action(
+                    'camoo_pay_order_status_changed',
                     $order,
-                    $merchantReferenceId,
-                    $enumStatus
+                    $enumStatus,
+                    $merchantReferenceId
                 ),
-                Status::CONFIRMED, Status::SUCCESS => self::processWebhookConfirmed($order, $merchantReferenceId, $payment),
-                Status::CANCELED => self::processWebhookCanceled($order, $merchantReferenceId),
-                Status::FAILED, Status::ERRORED => self::processWebhookFailed($order, $merchantReferenceId),
+                Status::CONFIRMED, Status::SUCCESS => do_action(
+                    'camoo_pay_order_status_changed',
+                    $order,
+                    Status::CONFIRMED,
+                    $merchantReferenceId,
+                    $payment
+                ),
+                Status::CANCELED => do_action(
+                    'camoo_pay_order_status_changed',
+                    $order,
+                    Status::CANCELED,
+                    $merchantReferenceId
+                ),
+                Status::FAILED, Status::ERRORED => do_action(
+                    'camoo_pay_order_status_changed',
+                    $order,
+                    Status::FAILED,
+                    $merchantReferenceId
+                )
             };
 
         }
@@ -343,6 +456,34 @@ if (!class_exists(Plugin::class)) {
             $number = preg_replace($pattern, '', $cleanedNumber);
 
             return substr($number, 0, 1) . str_repeat('*', strlen($number) - 3) . substr($number, -2);
+        }
+
+        public function onCamooPayStatusChanged(
+            WC_Order $order,
+            Status $status,
+            ?string $merchantReferenceId = null,
+            ?Payment $payment = null,
+        ): void {
+            if ($order->get_payment_method() !== self::WC_CAMOO_PAY_GATEWAY_ID) {
+                return;
+            }
+
+            self::$logger?->info(
+                __FILE__,
+                __LINE__,
+                sprintf(
+                    'CamooPay order %d transitioned to %s',
+                    $order->get_id(),
+                    $status->value
+                )
+            );
+
+            match ($status) {
+                Status::FAILED => self::processWebhookFailed($order, $merchantReferenceId),
+                Status::CONFIRMED => self::processWebhookConfirmed($order, $merchantReferenceId, $payment),
+                Status::CANCELED => self::processWebhookCanceled($order, $merchantReferenceId),
+                default => self::processWebhookProgress($order, $merchantReferenceId, $status),
+            };
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -373,7 +514,6 @@ if (!class_exists(Plugin::class)) {
             $fees = $verifyPayment?->fees ?? null;
             $order->add_order_note(__('CamooPay payment completed', 'camoo-pay-for-ecommerce'), true);
             self::applyStatusChange(Status::CONFIRMED, $order, $merchantReferenceId, $fees);
-            do_action('woocommerce_order_edit_status', $order->get_id(), 'completed');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -388,7 +528,6 @@ if (!class_exists(Plugin::class)) {
             }
             $order->update_status('pending');
             self::applyStatusChange($realStatus, $order, $merchantReferenceId);
-            do_action('woocommerce_order_edit_status', $order->get_id(), 'pending');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -397,7 +536,6 @@ if (!class_exists(Plugin::class)) {
             $order->update_status('cancelled');
             $order->add_order_note(__('CamooPay payment cancelled', 'camoo-pay-for-ecommerce'), true);
             self::applyStatusChange(Status::CANCELED, $order, $merchantReferenceId);
-            do_action('woocommerce_order_edit_status', $order->get_id(), 'cancelled');
         }
 
         /** @param bool|WC_Order|WC_Order_Refund $order */
@@ -406,7 +544,6 @@ if (!class_exists(Plugin::class)) {
             $order->update_status('failed');
             $order->add_order_note(__('CamooPay payment failed', 'camoo-pay-for-ecommerce'), true);
             self::applyStatusChange(Status::FAILED, $order, $merchantReferenceId);
-            do_action('woocommerce_order_edit_status', $order->get_id(), 'failed');
         }
 
         private static function applyStatusChange(
@@ -446,7 +583,7 @@ if (!class_exists(Plugin::class)) {
              *         // (maybe) do something with the args.
              *     }
              *
-             *     Add_action('camoo_pay_after_status_change', 'example_callback', 10, 2 );
+             *     add_action('camoo_pay_after_status_change', 'example_callback', 10, 2 );
              *
              *     /*
              *      * Trigger the actions by calling the 'example_callback()' function

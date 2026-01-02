@@ -184,6 +184,15 @@ if (!class_exists(PluginAdmin::class)) {
                         MetaKeysEnum::PAYMENT_MERCHANT_TRANSACTION_ID->value
                     );
 
+                    // add the source of the status update
+                    $message = sprintf(
+                        /* translators: 1: status, 2: transaction id */
+                        __('CamooPay payment status: %1$s (Transaction ID: %2$s) via admin check', 'camoo-pay-for-ecommerce'),
+                        esc_html($verify->status),
+                        esc_html($ptn)
+                    );
+
+                    $order->add_order_note($message);
                     Plugin::processWebhookStatus(
                         $order,
                         $verify->status,
@@ -195,11 +204,6 @@ if (!class_exists(PluginAdmin::class)) {
 
             wp_safe_redirect(self::getRedirectUrl());
             exit;
-        }
-
-        private static function getRedirectUrl(): string
-        {
-            return wp_get_referer() ?: admin_url('edit.php?post_type=shop_order');
         }
 
         public static function enqueue_admin_camoo_pay_css_scripts(): void
@@ -320,6 +324,11 @@ if (!class_exists(PluginAdmin::class)) {
 
                 echo esc_html(self::camoo_pay_fee_format((float)$camooPayFee));
             }
+        }
+
+        private static function getRedirectUrl(): string
+        {
+            return wp_get_referer() ?: admin_url('edit.php?post_type=shop_order');
         }
 
         private static function getLogger(): Logger
