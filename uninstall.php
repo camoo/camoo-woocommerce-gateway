@@ -34,6 +34,7 @@ function camoo_pay_remove_plugin_options(): void
     // Delete all options starting with 'woocommerce_wc_camoo_pay'
     $wpdb->query("DELETE FROM {$wpdb->options} WHERE `option_name` LIKE 'woocommerce_wc_camoo_pay%';");
 }
+
 /**
  * Remove the CamooPay gateway from the WooCommerce payment gateways list.
  *

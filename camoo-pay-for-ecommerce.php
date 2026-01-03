@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Requires Plugins: woocommerce
  * Plugin URI: https://github.com/camoo/camoo-woocommerce-gateway
  * Description: Receive Mobile Money payments on your store using CamooPay for WooCommerce.
- * Version: 1.0.8
+ * Version: 1.0.9
  * Tested up to: 6.9
  * Author: Camoo Sarl
  * Author URI: https://profiles.wordpress.org/camoo/
@@ -25,7 +25,8 @@ namespace Camoo\Pay\WooCommerce;
 defined('ABSPATH') || exit;
 
 if (version_compare(PHP_VERSION, '8.1', '<')) {
-    add_action('admin_notices', static function () {
+
+    add_action('admin_notices', static function(): void {
         echo '<div class="notice notice-error"><p>'
             . esc_html('CamooPay for e-Commerce requires PHP 8.1 or higher.')
             . '</p></div>';
@@ -41,7 +42,7 @@ require_once __DIR__ . '/includes/admin/PluginAdmin.php';
  */
 add_action('plugins_loaded', static function () {
     if (!class_exists('\WooCommerce')) {
-        add_action('admin_notices', static function () {
+        add_action('admin_notices', static function(): void {
             echo '<div class="notice notice-error"><p>'
                 . esc_html__('WooCommerce must be active to use CamooPay.', 'camoo-pay-for-ecommerce')
                 . '</p></div>';
@@ -51,13 +52,13 @@ add_action('plugins_loaded', static function () {
     }
 
     // Defer real plugin startup
-    add_action('init', function () {
+    add_action('init', static function(): void {
         $plugin = new Plugin(
             __FILE__,
             'WC_CamooPay_Gateway',
             'Gateway',
             'CamooPay for e-commerce payment gateway',
-            '1.0.8'
+            '1.0.9'
         );
 
         $plugin->register();

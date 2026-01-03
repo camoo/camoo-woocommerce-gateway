@@ -27,7 +27,7 @@ defined('ABSPATH') || exit;
 if (!class_exists(Plugin::class)) {
     class Plugin
     {
-        public const WC_CAMOO_PAY_DB_VERSION = '1.0.8';
+        public const WC_CAMOO_PAY_DB_VERSION = '1.0.9';
 
         public const DEFAULT_TITLE = 'CamooPay';
 
@@ -285,11 +285,15 @@ if (!class_exists(Plugin::class)) {
                         ],
                         'status_time' => [
                             'required' => false,
-                            'validate_callback' => 'is_string',
+                            'validate_callback' => static function ($value): bool {
+                                return is_string($value);
+                            },
                         ],
                         'payment_id' => [
                             'required' => false,
-                            'validate_callback' => 'is_string',
+                            'validate_callback' => static function ($value): bool {
+                                return is_string($value);
+                            },
                         ],
                     ],
                 ],

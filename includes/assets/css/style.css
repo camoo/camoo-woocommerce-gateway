@@ -41,7 +41,6 @@ div.camoo-pay-mobile-money-phone-number {
     transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-
 /* ===============================
    CAMOO PAY – SHARED STYLES
    Works for Classic + Blocks
@@ -52,7 +51,6 @@ div.camoo-pay-mobile-money-phone-number {
     text-align: center;
     margin-top: 16px;
 }
-
 .camoo-pay-phone-input:focus {
     outline: none;
     border-color: #2271b1;
@@ -66,27 +64,23 @@ div.camoo-pay-mobile-money-phone-number {
 .wc-block-components-payment-method__content .camoo-pay-fields {
     margin-top: 8px;
 }
-
 .wc-block-components-payment-method__content .camoo-pay-fields p {
     margin-bottom: 10px;
     font-size: 0.9rem;
     color: #333;
 }
-
 /* Input + icon row */
 .camoo-pay-fields .camoo-pay-input-row {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
 /* Icon inside Blocks */
 .camoo-pay-fields img {
     width: 36px;
     height: 36px;
     object-fit: contain;
 }
-
 .wc-block-components-payment-method-label img[alt="CamooPay"] {
     max-height: 22px;
 }

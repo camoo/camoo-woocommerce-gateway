@@ -441,10 +441,10 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
         }
 
         // Show only while waiting for Mobile Money confirmation
-        if (in_array($order->get_status(), ['pending', 'on-hold'], true)) {
+        if (in_array($order->get_status(), ['pending', 'on-hold', 'processing'], true)) {
             echo '<p class="woocommerce-info">';
             echo esc_html__(
-                'Please confirm the payment on your phone to complete the order.',
+                'Awaiting CamooPay payment confirmation',
                 'camoo-pay-for-ecommerce'
             );
             echo '</p>';
@@ -455,7 +455,6 @@ class WC_CamooPay_Gateway extends WC_Payment_Gateway
     {
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
 
-        // Thank-you page message (Mobile Money confirmation)
         add_action(
             'woocommerce_thankyou_' . $this->id,
             [$this, 'render_thankyou_notice']
