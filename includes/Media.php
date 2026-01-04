@@ -14,9 +14,7 @@ final class Media
     public function __construct(private ?Logger $logger = null)
     {
         // Ensure that the logger is instantiated correctly
-        if ($this->logger === null) {
-            $this->logger = new Logger(Plugin::WC_CAMOO_PAY_GATEWAY_ID, WP_DEBUG);
-        }
+        $this->logger ??= new Logger(Plugin::WC_CAMOO_PAY_GATEWAY_ID, WP_DEBUG);
     }
 
     /** Upload images to the media library if not already uploaded. */

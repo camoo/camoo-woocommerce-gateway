@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Camoo\Pay\WooCommerce\Admin\Enum;
 
+defined('ABSPATH') || exit;
+
 enum MediaEnum: string
 {
     case MOMO_IMAGE = 'wc_camoo_pay_db_online_momo_image';

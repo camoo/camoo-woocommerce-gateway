@@ -30,12 +30,57 @@ div.camoo-pay-mobile-money-phone-number {
 }
 .camoo-pay-mobile-money-phone-number img {
     max-width:80%;
-    height: auto !important; border: 3px solid #50575e; border-radius: 15px; padding:5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    height: auto !important; border: 2px solid #50575e; border-radius: 14px; padding:6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .camoo-pay-phone-input {
     width: 100%; padding: 10px;
     font-size: 14px;
-    border-radius: 5px;
+    border-radius: 6px;
     border: 2px solid #ddd;
     background-color: #f9f9f9; margin-top: 8px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+/* ===============================
+   CAMOO PAY – SHARED STYLES
+   Works for Classic + Blocks
+================================ */
+
+/* Mobile Money image wrapper */
+.camoo-pay-mobile-money-phone-number {
+    text-align: center;
+    margin-top: 16px;
+}
+.camoo-pay-phone-input:focus {
+    outline: none;
+    border-color: #2271b1;
+    box-shadow: 0 0 0 1px rgba(34,113,177,.2);
+}
+
+/* ===============================
+   BLOCK CHECKOUT ONLY
+================================ */
+
+.wc-block-components-payment-method__content .camoo-pay-fields {
+    margin-top: 8px;
+}
+.wc-block-components-payment-method__content .camoo-pay-fields p {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    color: #333;
+}
+/* Input + icon row */
+.camoo-pay-fields .camoo-pay-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+/* Icon inside Blocks */
+.camoo-pay-fields img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+.wc-block-components-payment-method-label img[alt="CamooPay"] {
+    max-height: 22px;
 }

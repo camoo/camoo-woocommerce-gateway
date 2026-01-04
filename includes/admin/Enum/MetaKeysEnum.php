@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Camoo\Pay\WooCommerce\Admin\Enum;
 
+defined('ABSPATH') || exit;
+
 enum MetaKeysEnum: string
 {
     case CAMOO_PAYMENT_TRANSACTION_ID = '_camoo_pay_transaction_id';

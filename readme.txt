@@ -3,7 +3,7 @@ Contributors: camoo
 Tags: Mobile Money, e-Commerce, Cameroon, MTN, Orange
 Requires Plugins: woocommerce
 Tested up to: 6.9
-Stable tag: 1.0.7
+Stable tag: 1.0.9
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -87,6 +87,14 @@ More details can be found on the [documentation website](https://www.camoo.cm)
 N/A
 
 == Changelog ==
+= 1.0.9: Jan 03, 2026 =
+* Fixed - Fix rest API compatibility issue
+* Tweak - General code improvements
+
+= 1.0.8: Jan 02, 2026 =
+* Tweak - Support for new WooCommerce block checkout improvements
+* Fixed - Fix thanks page display issue
+
 = 1.0.7: December 15, 2025 =
 * Fixed - Support for new status 'wc-camoo-pending'
 * Fixed - Ensure metadata is saved correctly
